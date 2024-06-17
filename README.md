@@ -1,5 +1,7 @@
 # MEDOC_public
 Public release of the MEDOC algorithm for the prediction of protein protonation states
+MEDOC necessitates a high precision python3 (64bits) environment to work on larger sequences.
+
 To use MEDOC, open a terminal and type :
 	python3 MEDOC_V1.0.py [command line arguments]
 The following command line arguments can be specified to change the default behavior.
