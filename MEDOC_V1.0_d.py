@@ -9,9 +9,12 @@ def initialize_additive_DF_array(database_suffix):
             try :
                 if AA_type[a0]!='R':
                     temp_AA=AA_type[a0]
-                    data_U=read_file(MODULE_PATH+'/MEAN_FIELD'+database_suffix+'/VOLUME/Prediction_parameters/U/'+temp_AA+'_'+str(i+1)+'.txt',silent=True)
-                    data_F=read_file(MODULE_PATH+'/MEAN_FIELD'+database_suffix+'/VOLUME/Prediction_parameters/F/'+temp_AA+'_'+str(i+1)+'.txt',silent=True)
-            except : 
+
+                    data_U=read_file('./Prediction_params/MEAN_FIELD'+database_suffix+'/VOLUME/Prediction_parameters/U/'+temp_AA+'_'+str(i+1)+'.txt',silent=True)
+                    data_F=read_file('./Prediction_params/MEAN_FIELD'+database_suffix+'/VOLUME/Prediction_parameters/F/'+temp_AA+'_'+str(i+1)+'.txt',silent=True)
+
+
+            except :
                 continue
             for a1 in range(len(data_F)):
                 for a2 in range(len(AA_type)):
@@ -27,9 +30,12 @@ def initialize_additive_DF_array(database_suffix):
             try :
                 if AA_type[a0]!='R':
                     temp_AA=AA_type[a0]
-                    data_F=read_file(MODULE_PATH+'/MEAN_FIELD'+database_suffix+'/CHARGE/Prediction_parameters/F/'+temp_AA+'_'+str(i+1)+'.txt',silent=True)
-                    data_U=read_file(MODULE_PATH+'/MEAN_FIELD'+database_suffix+'/CHARGE/Prediction_parameters/U/'+temp_AA+'_'+str(i+1)+'.txt',silent=True)
-            
+
+                    
+                    
+
+                    data_U=read_file('./Prediction_params/MEAN_FIELD'+database_suffix+'/CHARGE/Prediction_parameters/U/'+temp_AA+'_'+str(i+1)+'.txt',silent=True)
+                    data_F=read_file('./Prediction_params/MEAN_FIELD'+database_suffix+'/CHARGE/Prediction_parameters/F/'+temp_AA+'_'+str(i+1)+'.txt',silent=True)
             except :
                 continue
             for a1 in range(len(data_F)):
