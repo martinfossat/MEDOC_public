@@ -2156,11 +2156,14 @@ if __name__=="__main__":
         names=[]
         for i in range (len(proba0)):
             names+=[seq_1[map[i]]+str(map[i]+1)]
-            if det_lvl<4 :
-                param_all[i]=plot_frac_and_deriv(pH,proba1[i,:],name=seq_1[map[i]]+str(map[i]+1),loc='./Results/Plots/',fit=False,plot=False)
-            else :
-                param_all[i]=plot_frac_and_deriv(pH,proba1[i,:],name=seq_1[map[i]]+str(map[i]+1),
-                                                    loc='./Results/Plots/',fit=False,plot=True)
+            try :
+                if det_lvl<4 :
+                    param_all[i]=plot_frac_and_deriv(pH,proba1[i,:],name=seq_1[map[i]]+str(map[i]+1),loc='./Results/Plots/',fit=False,plot=False)
+                else :
+                    param_all[i]=plot_frac_and_deriv(pH,proba1[i,:],name=seq_1[map[i]]+str(map[i]+1),
+                                                        loc='./Results/Plots/',fit=False,plot=True)
+            except :
+                print("Could not print individual figure for ",names[i])
         x=[i for i in range(len(param_all))]
         plt.bar(x,param_all[:,1],color='orange')
         plt.xticks(x,names,rotation=90)
