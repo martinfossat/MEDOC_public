@@ -720,13 +720,14 @@ def read_key_file(key_file,pattern,silent=True):
                     out+=[data[i].split()[1]]                    
     return out             
 def get_ref_pkas_MEDOC_public() :
-    [['GLX','LYX','ASX','TYX','SXP','TXP','YXP','HDX','HEX','HIX'],
+    refs=[['GLX','LYX','ASX','TYX','SXP','TXP','YXP','HDX','HEX','HIX'],
      [['E','e'],['K','k'],['D','d'],['Y','y'],['U','u'],['X','x'],['Z','z'],['H','9'],['H','8'],['H','h']],
      ['NaN','NaN','NaN','NaN','NaN','NaN','NaN','NaN','NaN'],['NaN','NaN','NaN','NaN','NaN','NaN','NaN','NaN','NaN'],
      ['','','','','','','','',''],[1,-1,1,1,1,1,1,-1,-1,-1],[4.34,10.34,3.86,9.76,5.96,6.3,5.96,7.15,6.55,6.45],
      [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],['NaN','NaN','NaN','NaN','NaN','NaN','NaN','NaN','NaN'],
      ['NaN','NaN','NaN','NaN','NaN','NaN','NaN','NaN','NaN'],['NaN','NaN','NaN','NaN','NaN','NaN','NaN','NaN','NaN'],
      ['NaN','NaN','NaN','NaN','NaN','NaN','NaN','NaN','NaN']]
+    return refs
 def get_base_contexts(map,neigh,seq_1,seq_data_q):
     contexts=[]
     states=[]
@@ -1986,7 +1987,7 @@ if __name__=="__main__":
     else : 
         database_suffix=''
     base_rep=''
-    initialize_additive_DF_array_MEDOC_public(database_suffix)
+    initialize_additive_DF_array_MEDOC_public()
     pH=np.arange(pH_range[0],pH_range[1],res,dtype=np.longdouble)
     seq_1=read_file(seq_file)[0][0]
     if seq_1[0]!='z':
