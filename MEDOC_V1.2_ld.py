@@ -2037,6 +2037,13 @@ if __name__=="__main__":
         try : 
             if int(args.nneigh)>=1:
                 neigh=int(args.nneigh)
+            elif int(args.nneigh)==0:
+                neigh=1
+                print("You have chosen no neighbors, which is in effect the same as unshifted. Thus unshifted was turned on instead")
+                additive=False
+                penta=False
+                unshifted=True
+                suffix='Unshifted'
             else :
                 neigh=2
                 print("Invalid value for nneigh, defaulting to ",neigh)
@@ -2048,10 +2055,10 @@ if __name__=="__main__":
             base_E=float(args.base_E)
         except :
             base_E=-709.0*(R*T)
-            print("Invalid value for max_frac, defaulting to ",base_E)
+            print("Invalid value for base_E, defaulting to ",base_E)
     else:
         base_E=-709.0*(R*T)
-        print("No value for max_frac, defaulting to ",base_E)
+        print("No value for base_E, defaulting to ",base_E)
     fraction_kept=0.
     max_frac=float('+inf')
     test_time=False
