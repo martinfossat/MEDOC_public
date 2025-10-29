@@ -7,7 +7,7 @@ Presumably single is faster but higher precision allow to tackle longer sequence
 A log of the changes is available in a pdf on github.
 
 
-To use MEDOC, open a terminal and type : python3 MEDOC_V2.4.py [command line arguments]
+To use MEDOC, open a terminal and type : python3 MEDOC_VX.py [command line arguments]
 The following command line arguments can be specified to change the default behavior.
 
 
