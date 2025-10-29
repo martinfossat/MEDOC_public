@@ -1,4 +1,4 @@
-"""MEDOC 2.4 release 27/10/2025"""
+"""MEDOC 1.4.4 release 27/10/2025"""
 __author__ = "Martin Fossat"
 __credits__ = ["Martin Fossat"]
 __version__ = "1.4.4"
@@ -2379,11 +2379,11 @@ if __name__=="__main__":
                 write_file('./Results/States_details/States_'+suffix+'.txt',SW)
                 write_file('./Results/Fs/Fs_'+suffix+'.txt',EW)
     Meso_G_all=np.zeros((Nmes),dtype=np.single)
-    #print(lvl_ste)
+    if state_prun :
+        min_frac=np.exp(-max_diff/(R*T))
+        print("Max diff : "+str(max_diff)+" which corresponds to a minimum ensemble fraction of the kept states of %0.4f"%min_frac)
     if not per_res:
         if det_lvl>=2:
-            min_frac=np.exp(-max_diff/(R*T))
-            print("Max diff : "+str(max_diff)+" which corresponds to a minimum ensemble fraction of the kept states of %0.4f" %min_frac)
             if not state_prun :
                 print("q\tTotal energy\tTotal N_states")
             else :
@@ -2406,14 +2406,25 @@ if __name__=="__main__":
                     temp_8=str(temp_6)
             except :
                 temp_8='Too large to estimate'
-            # print(temp_5,temp_6)
-            # print(temp_5/temp_6)
-            # print("%0.4f"%(temp_5/temp_6))
             if det_lvl>=2:
                 if state_prun:
                     print(str(temp_4).rjust(6),'\t',"%0.4f" % temp_1,'\t',"%0.4f" % temp_2,'\t',("%0.4f" % temp_3).rjust(8),'\t', temp_8.rjust(7),'\t',str(temp_5).rjust(7),"%0.4f" % (temp_5/temp_6),"%0.4f" %temp_9)
                 else :
                     print(temp_4,'\t',"%0.4f"%temp_1,'\t',temp_6)
+        if state_prun:
+            check_and_create_rep('Results/States_details')
+            W_E_temp='Mesostate_q\tStates_energies\n'
+            W_ste_temp='Mesostate_q\tStates_ids\n'
+            for q in range(len(lvl_ste)):
+                W_E_temp+=str(layers_q[q])+'\t'
+                W_ste_temp+=str(layers_q[q])+'\t'
+                for m in range(len(lvl_ste[q])):
+                    W_E_temp+=str(lvl_E[q][m])+'\t'
+                    W_ste_temp+=lvl_ste[q][m]+'\t'
+                W_E_temp+='\n'
+                W_ste_temp+='\n'
+            write_file('Results/States_details/Kept_states_ids.txt',W_ste_temp)
+            write_file('Results/States_details/Kept_states_Es.txt',W_E_temp)
     # elif not per_res :
     #     if det_lvl>=2:
     #         #This is for Shahar
