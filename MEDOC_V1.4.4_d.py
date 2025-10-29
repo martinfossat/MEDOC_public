@@ -1,7 +1,34 @@
-def check_and_create_rep(directory):
-    if not os.path.exists(directory):
-        os.makedirs(directory)    
-        print("Created directory : "+directory)
+"""MEDOC 2.4 release 27/10/2025"""
+__author__ = "Martin Fossat"
+__credits__ = ["Martin Fossat"]
+__version__ = "1.4.4"
+__maintainer__ = "Martin Fossat"
+__email__ = "fossat@ie-freiburg.mpg.de"
+__status__ = "Production"
+import matplotlib
+import math
+import matplotlib.pyplot as plt
+plt.rcParams["font.family"]="Times New Roman"
+from matplotlib.backends.backend_pgf import FigureCanvasPgf
+matplotlib.backend_bases.register_backend('pdf',FigureCanvasPgf)
+pgf_with_latex={
+    "text.usetex":True,
+    "pgf.preamble":
+        r'\usepackage{color}',
+    "font.family":"Times New Roman"}
+import matplotlib
+matplotlib.rcParams.update(pgf_with_latex)
+import matplotlib.pyplot as plt
+from matplotlib import cm
+import numpy as np
+import scipy.misc
+import os
+import time
+global AA_type
+MODULE_PATH = os.path.dirname(__file__)
+AA_type=['E','D','H','K','Y','8','9','R','C','A','F','G','L','I','M','N','P','Q','T','V','S','W']
+default_res=0.01
+R=np.double(1.98720425864083*10**(-3))
 def  initialize_additive_DF_array_MEDOC_public():
     import numpy as np
     global DF_V,DF_Q
@@ -158,7 +185,7 @@ def  initialize_additive_DF_array_MEDOC_public():
     ,[-0.07068978756286647,0.02493631564298981,0.04914099994522264,0.03490048880350949,0.04771410986344599,0.04733895305420864]\
     ,[-0.07167569778366181,0.03181337229462032,0.051764565467234604,0.05255319173179999,0.050930784654692265,0.049469690472103346]\
     ,[-0.06220262655911074,0.026375444158202355,0.045660392521118004,0.03675975472204902,0.04715801231830443,0.049098366874776186]\
-    ,[-0.07447997933624267,0.02916747879908975,0.06389228591248804,0.02170970257759925,0.1308768760056414,-0.022224698687782096]]],dtype=np.float16)
+    ,[-0.07447997933624267,0.02916747879908975,0.06389228591248804,0.02170970257759925,0.1308768760056414,-0.022224698687782096]]],dtype=np.double)
     DF_Q=np.array([[[-0.26912017526287124,-0.19790042588058968,-0.1771325119001334,-0.1390228005347286,-0.1157313592250951,-0.10623193041288091]\
          ,[-0.3560263520607516,-0.24627933025003113,-0.20934366100910642,-0.1830222389036811,-0.14392042913809658,-0.138717075048026]\
          ,[0.4256475738644047,0.372167923185914,0.252328295694633,0.2013536613799452,0.16072755318784787,0.15249780400932217]\
@@ -314,18 +341,26 @@ def  initialize_additive_DF_array_MEDOC_public():
          ,[float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN')]\
          ,[float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN')]\
          ,[float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN')]\
-         ,[float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN')]]],dtype=np.float16)
+         ,[float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN')]]],dtype=np.double)
 def initialize_additive_DF_array(database_suffix):
     global DF_V,DF_Q,DU_V,DU_Q
+    # Remember this the
     AA_type=['E','D','H','K','Y','8','9','R','C','A','F','G','L','I','M','N','P','Q','T','V','S','W']
     AA_sign=[-1,-1,1,1,-1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    # Before the deletion of the Tfact
+    # q_scale=[0.27,0.0924,float('NaN'),float('NaN'),float('NaN'),0.20,0.20]
+    # V_scale=[0.279,0.21,float('NaN'),float('NaN'),float('NaN'),0.26,0.26]
+    # q_offset=[0.0,0.00,float('NaN'),float('NaN'),float('NaN'),0.00,0.00]
+    # V_offset=[0.0315 ,0.01512,float('NaN'),float('NaN'),float('NaN'),0.037,0.037]
+    # T_fact_spe=[1.,1.,1.,1.,1.,1.,1.]
     q_scale=[0.39555,0.135366,float('NaN'),float('NaN'),float('NaN'),0.293,0.293]
     V_scale=[0.408735,0.30765,float('NaN'),float('NaN'),float('NaN'),0.3809,0.3809]
     q_offset=[0.0,0.00,float('NaN'),float('NaN'),float('NaN'),0.00,0.00]
     V_offset=[0.0461475 ,0.0221508,float('NaN'),float('NaN'),float('NaN'),0.054205 ,0.054205]
     T_fact_spe=[1.,1.,1.,1.,1.,1.,1.]
     include=[]
-    T_fact=1.
+    #T=293.
+    T_fact=1.#T/200.
     for i in range(len(q_scale)):
         if math.isnan(q_scale[i]):
             include+=[False]
@@ -341,7 +376,7 @@ def initialize_additive_DF_array(database_suffix):
     DF_V=np.array([[[float('NaN') for l in range(max_neigh)] for k in range(len(AA_type))] for i in range(0,7)])
     DU_V=np.array([[[float('NaN') for l in range(max_neigh)] for k in range(len(AA_type))] for i in range(0,7)])
     for i in range(max_neigh):
-        for a0 in range(0,7):  
+        for a0 in range(0,7):  #only the ionizable residue here for the central amino acid
             try:
                 if AA_type[a0]!='R':
                     temp_AA=AA_type[a0]
@@ -361,10 +396,12 @@ def initialize_additive_DF_array(database_suffix):
                     if data_F[a1][0].upper()==AA_type[a2]:
                         DF_V[a0,a2,i]=float(data_F[a1][1])
                         DU_V[a0,a2,i]=float(data_U[a1][1])
+    # For now I consider the effect to be only dependent on position, charge only change the sign
+    #For simplicity's sake I will make this array the same as the DF_vV array in dimension. For now all of the number are the same, but won't be eventually
     DF_Q=np.array([[[float('NaN') for l in range(0,max_neigh)] for k in range(len(AA_type))] for i in range(0,7)])
     DU_Q=np.array([[[float('NaN') for l in range(0,max_neigh)] for k in range(len(AA_type))] for i in range(0,7)])
     for i in range(max_neigh):
-        for a0 in range(0,7):  
+        for a0 in range(0,7):  #only the ionizable residue here for the central amino acid
             try:
                 if AA_type[a0]!='R':
                     temp_AA=AA_type[a0]
@@ -387,6 +424,41 @@ def initialize_additive_DF_array(database_suffix):
     for a0 in range(0,7):
         DF_Q[a0]=T_fact*T_fact_spe[a0]*(DF_Q[a0]*q_scale[a0]+q_offset[a0]*AA_sign[a0])
         DF_V[a0]=T_fact*T_fact_spe[a0]*(DF_V[a0]*V_scale[a0]+V_offset[a0])
+    # This bit is to make the public version of MEDOC so we don't need external files
+    # WQ='['
+    # WV='['
+    # for i in range(len(DF_Q)):
+    #     WQ+='['
+    #     WV+='['
+    #     for j in range(len(DF_Q[i])):
+    #         WQ+='['
+    #         WV+='['
+    #         for k in range(len(DF_Q[i][j])):
+    #             if not math.isnan(DF_Q[i][j][k]):
+    #                 WQ+=str(DF_Q[i][j][k])
+    #             else :
+    #                 WQ+='float(\'NaN\')'
+    #
+    #             if not math.isnan(DF_V[i][j][k]):
+    #                 WV+=str(DF_V[i][j][k])
+    #             else:
+    #                 WV+='float(\'NaN\')'
+    #
+    #             if  k!=len(DF_Q[i][j])-1:
+    #                 WQ+=','
+    #                 WV+=','
+    #         WQ+=']\ \n'
+    #         WV+=']\ \n'
+    #         if j!=len(DF_Q[i])-1:
+    #             WQ+=','
+    #             WV+=','
+    #     WQ+=']\ \n'
+    #     WV+=']\ \n'
+    #     if i!=len(DF_Q)-1:
+    #         WQ+=','
+    #         WV+=','
+    # WQ+=']'
+    # WV+=']'
 def read_file(file_name,silent=False,split='') :
     data=load_file(file_name,silent=silent)
     len1=len(data)
@@ -500,6 +572,7 @@ def convert_AA_3_to_1_letter(input_arr,silent=False):
                 print("Did not convert "+str(input_arr[i]))
     return output_arr
 def read_sequence(seq_3,list_res):
+    #This has to be caled twice : this is the first call
     pos_res,neg_res,base_charge,arg_res,raw_seq,seq_data_q,seq_data_id,seq_id_reduced,map,new_W=HSQ_internal_sequence_create(
         seq_3,list_res)
     titrable_residue_indexes=[]
@@ -521,11 +594,12 @@ def read_sequence(seq_3,list_res):
     pos_res,neg_res,base_charge,arg_res,raw_seq,seq_data_q,seq_data_id,seq_id_reduced,map,new_W=HSQ_internal_sequence_create(seq_3,list_res)
     return sites_num,titrable_residue_indexes,pos_res,neg_res,base_charge,arg_res,raw_seq,seq_data_q,seq_data_id,seq_id_reduced,map,new_W
 def HSQ_internal_sequence_create(seq,list_res,no_write=False):
+    #New version : passes the sequence instead of the name of the sequence file
     data=seq
     new_W=''
     pos_res=0
     neg_res=0
-    base_charge=0 
+    base_charge=0 # This is to take into account the phosphoresidues -1 base state
     arg_res=0
     seq_data_q=[]
     seq_data_id=[]
@@ -533,7 +607,7 @@ def HSQ_internal_sequence_create(seq,list_res,no_write=False):
     raw_seq_2=[]
     map=[]
     for i in range(len(data)) :
-        line=data[i]
+        line=data[i]#.split()[0]
         do_it=find_ind(i,list_res)
         raw_seq_2+=[line]
         if (line=="GLU" or line=="GLH"  or line=="GLX") and do_it==True :
@@ -559,7 +633,7 @@ def HSQ_internal_sequence_create(seq,list_res,no_write=False):
             raw_seq+=['ARG']
             pos_res+=1
             arg_res+=1
-            seq_data_q+=[0] 
+            seq_data_q+=[0] # Why 0 ?
             seq_data_id+=[float('NaN')]
         elif (line=="TYX" or line=="TYR" or line=="TYO") and do_it==True :
             new_W+='TYX\n'
@@ -611,7 +685,7 @@ def HSQ_internal_sequence_create(seq,list_res,no_write=False):
                 raw_seq+=[line]
             new_W+=line+'\n'
             seq_data_q+=[0]
-            seq_data_id+=[float('NaN')] 
+            seq_data_id+=[float('NaN')] #, for now we will ignore the context, so that is ok
         if seq_data_q[-1]!=0 and line!="END":
             map+=[i]  
     if no_write==False :
@@ -626,6 +700,7 @@ def find_ind(ind,arr) :
         if arr[i]==ind :
             return True
     return False
+# Just got rid of seq_out
 def get_ref_pkas(mode,FF='OPLS',DF_only=True,version=-1,silent=True,suffix='') :
     if version==-1 :
         try :
@@ -635,7 +710,7 @@ def get_ref_pkas(mode,FF='OPLS',DF_only=True,version=-1,silent=True,suffix='') :
             version=str(-1)
     else :
         version=str(version)
-    seq_ref_arr=['GLX','LYX','ASX','TYX','SXP','TXP','YXP','HDX','HEX','HIX']
+    seq_ref_arr=['GLX','LYX','ASX','TYX','SXP','TXP','YXP','HDX','HEX','HIX']#,'HIS','ARG'] # the purpose of this array is to remember which is which in the pka_ref array
     ref_notation=[['E','e'],['K','k'],['D','d'],['Y','y'],['U','u'],['X','x'],['Z','z'],['H','9'],['H','8'],['H','h']]
     factor=[1,-1,1,1,1,1,1,-1,-1,-1]
     ref=[]
@@ -648,7 +723,7 @@ def get_ref_pkas(mode,FF='OPLS',DF_only=True,version=-1,silent=True,suffix='') :
                 print("Could not get the offset from the model compounds for "+seq_ref_arr[i])
             ref+=[0.]
     if mode==1 :     
-        pKa_ref_arr=[4.34,10.34,3.86,9.76,5.96,6.3,5.96,7.15,6.55,6.45] 
+        pKa_ref_arr=[4.34,10.34,3.86,9.76,5.96,6.3,5.96,7.15,6.55,6.45] #Values from platzer2014, context if ACE-GXG-NME, 50mM NaCl 
         folders=[base+'GLX/0.05/_Analysis/Output.txt',\
         base+'LYX/0.05/_Analysis/Output.txt',\
         base+'ASX/0.05/_Analysis/Output.txt',
@@ -685,7 +760,7 @@ def get_ref_pkas(mode,FF='OPLS',DF_only=True,version=-1,silent=True,suffix='') :
                     print("File is not found or is invalid : ",folders[i])
     elif mode==2 :
         print("! You should proably use mode 1 instead of mode 2 !")
-        pKa_ref_arr=[4.25,10.28,3.65]
+        pKa_ref_arr=[4.25,10.28,3.65]#6.8,13.9] 
         base='/work/mfossat/pKa_Calc/ALL_MDCP/'
         folders=[base+'GLX/0.05/_Analysis/Output.txt',\
         base+'LYX/0.05/_Analysis/Output.txt',\
@@ -733,15 +808,19 @@ def get_ref_pkas_MEDOC_public() :
      ['NaN','NaN','NaN','NaN','NaN','NaN','NaN','NaN','NaN']]
     return refs
 def get_base_contexts(map,neigh,seq_1,seq_data_q):
+    # So the first part : get all the context. Read only once.
     contexts=[]
     states=[]
+    #Now going to get actual pattern
     for i in range(len(map)):
         tmp=''
         tmp2=[]
         for j in range(-neigh,neigh+1):
+            #if not outside of the sequence
             if map[i]+j>=1 and map[i]+j<len(seq_1)-1:
-                tmp+=seq_1[map[i]+j]
+                tmp+=seq_1[map[i]+j].upper()
                 tmp2+=[seq_data_q[map[i]+j]]
+            # Just padding
             else :
                 tmp+='_'
                 tmp2+=[float('nan')]
@@ -755,6 +834,9 @@ def get_all_contexts(contexts,states,neigh,refs,unshifted,reverse,penta,additive
     pat_seq=[[] for i in range(len(contexts))]
     pat_ste=[[] for i in range(len(contexts))]
     pat_E=[[] for i in range(len(contexts))]
+    # Now to get the contexts combinatorics
+    # 0 is proton bound
+    # 1 is proton unbound
     for i in range(len(contexts)):
         count=0
         new_seq=''
@@ -773,6 +855,7 @@ def get_all_contexts(contexts,states,neigh,refs,unshifted,reverse,penta,additive
         for j in range(neigh):
             if states[i][j]==-1 or states[i][j]==1 :
                 count+=1
+        #inverted 0 and 1
         for curr in itertools.product([1,0],repeat=count):
             tmp=''
             new_seq=''
@@ -797,8 +880,10 @@ def get_all_contexts(contexts,states,neigh,refs,unshifted,reverse,penta,additive
                     txt_ste+='1'
                     tmp+=contexts[i][k]
             new_seq+=tmp
+            #central residue is always written charged
             new_seq+=contexts[i][neigh].upper()
             for k in range(neigh+1,neigh*2+1):
+                #inverted lower upper
                 if contexts[i][k]=='E' or contexts[i][k]=='D' or contexts[i][k].upper()=='Y':
                     new_seq+=contexts[i][k].lower()
                 elif contexts[i][k]=='K' or contexts[i][k]=='H' :
@@ -807,6 +892,7 @@ def get_all_contexts(contexts,states,neigh,refs,unshifted,reverse,penta,additive
                     new_seq+=contexts[i][k]
             pat_ste[i]+=[txt_ste]
             pat_seq[i]+=[new_seq]
+            #This is just to have a good unshifted graph that does not skip over any of the combinatorics
             if unshifted==True :
                 for j in range(len(refs[1])):
                     if refs[1][j][1].upper()==new_seq[neigh].upper() :
@@ -818,6 +904,7 @@ def get_all_contexts(contexts,states,neigh,refs,unshifted,reverse,penta,additive
                     pat_E[i]+=[F_mdcp_expt]
                 continue
             else :
+                #Now we also need to correct this values so that it represent X instead of GXG
                 if new_seq[neigh]=='H':
                     He_seq=''
                     Hd_seq=''
@@ -848,9 +935,11 @@ def get_all_contexts(contexts,states,neigh,refs,unshifted,reverse,penta,additive
             else :
                 sign2=1
             if new_seq[neigh]=='H':
-                pat_E[i]+=[get_G_sum([sign2*(F_mdcp_expt_e-sign*((F_pat_e-offset_pat_e)-(F_mdcp_e-mdcp_offset_e))),sign2*(F_mdcp_expt_d-sign*((F_pat_d-offset_pat_d)-(F_mdcp_e-mdcp_offset_e)))],T)]
+                #pat_E[i]+=[get_G_sum([sign2*(F_mdcp_expt_e-sign*((F_pat_e-offset_pat_e)*(T/T_pat)-(F_mdcp_e-mdcp_offset_e)*(T/T_mdcp))),sign2*(F_mdcp_expt_d-sign*((F_pat_d-offset_pat_d)*(T/T_pat)-(F_mdcp_e-mdcp_offset_e)*(T/T_mdcp)))])]
+                pat_E[i]+=[get_G_sum(np.array([sign2*(F_mdcp_expt_e-sign*((F_pat_e-offset_pat_e)-(F_mdcp_e-mdcp_offset_e))),sign2*(F_mdcp_expt_d-sign*((F_pat_d-offset_pat_d)-(F_mdcp_e-mdcp_offset_e)))]),T)]
             else :
                 pat_E[i]+=[sign2*(F_mdcp_expt-sign*((F_pat-offset_pat)-(F_mdcp-mdcp_offset)))]
+                #pat_E[i]+=[sign2*(F_mdcp_expt*(T/T_expt)-sign*((F_pat-offset_pat)*(T/T_pat)-(F_mdcp-mdcp_offset)*(T/T_mdcp)))]
         pat_ste[i]=np.array(pat_ste[i])
     if missing_pat==False:
         for i in range(len(pat_E)):
@@ -872,11 +961,14 @@ def get_pattern_energy_from_database(pattern,refs,reverse,penta,additive,T,data_
         print(pattern[neigh])
         input("This should not happen")
     sign,sign2=check_sign(pattern[neigh],refs,reverse)
+    #I will have to introduce temperature renomarlaization
     F_mdcp_expt=R*T*np.log(10**(refs[6][j]))
     good=0
     tot=0
     if penta==True :
+        # Offset in model compound simulation
         mdcp_offset=refs[7][j] 
+        # Free energy from mdcp 
         F_mdcp=refs[2][j]
         F_mdcp_err=refs[3][j]
         S_mdcp=refs[8][j]
@@ -894,13 +986,14 @@ def get_pattern_energy_from_database(pattern,refs,reverse,penta,additive,T,data_
                         print("Did not find exact peptide ", pattern)
                         not_found=True  
                         setup_motif_database_sequence(temp,pattern,data_dir)
-                        return None 
+                        return None #continue
             except : 
                 print("Did not find peptide ", temp)
                 not_found=True  
                 setup_motif_database_sequence(temp,pattern,data_dir)
-                return None 
+                return None #continue
         good=0
+        # Capitalizing middle leter:
         temp_pat=''
         for l in range(len(pattern)):
             if l==neigh :
@@ -922,6 +1015,7 @@ def get_pattern_energy_from_database(pattern,refs,reverse,penta,additive,T,data_
                     if os.path.isdir(data_dir+'/'+temp+'/'+dirs[l]+'/'+dups[n]):
                         try :
                             tmp=read_file(data_dir+'/'+temp+'/'+dirs[l]+'/'+dups[n]+'/_Analysis/Output.txt',silent=True)
+                            #patterns free energy            
                             F_pat_err+=float(tmp[-1][-1])**2
                             F_pat+=float(tmp[-2][-1])
                             S_pat_err+=float(tmp[-5][-1])**2
@@ -947,6 +1041,7 @@ def get_pattern_energy_from_database(pattern,refs,reverse,penta,additive,T,data_
                         U_pat=U_pat/tot
                         U_pat_err=np.sqrt(U_pat_err)
                     break
+        # If you haven't found an exact match, you can still look for a reduced equivalent 
         if good==0 and reduced:
             tot=0
             F_pat_err=0
@@ -987,6 +1082,7 @@ def get_pattern_energy_from_database(pattern,refs,reverse,penta,additive,T,data_
             print("No free energy file for "+temp+"/"+pattern)
             return None
         try : 
+            #Offset pattern
             tmp=read_key_file(data_dir+'/'+temp+'/'+dirs[0]+'/1/run.key',['FMCSC_PKA_REP_POT','FMCSC_TEMP'],silent=silent)
             offset_pat=float(tmp[0])
             T_pat=float(tmp[1])
@@ -1009,6 +1105,7 @@ def get_pattern_energy_from_database(pattern,refs,reverse,penta,additive,T,data_
         U_mdcp_expt=0.
         S_mdcp_expt=0.
     else : 
+        #This is if penta and additive is false (i.e. model compound values)
         T_pat=T
         F_pat=0.
         F_pat_err=0.
@@ -1025,8 +1122,17 @@ def get_pattern_energy_from_database(pattern,refs,reverse,penta,additive,T,data_
         print("pentpeptide "+pattern+" has a large error ("+str(F_pat_err)+")")
     return F_pat,F_pat_err,F_mdcp,S_pat,S_mdcp,U_pat,U_mdcp,offset_pat,mdcp_offset,U_mdcp_expt,S_mdcp_expt,sign,F_mdcp_expt,T_pat
 def get_G_sum(Garr,T):
-    Garr=np.array(Garr)
-    out=-R*T*np.log(np.sum(np.exp(-(Garr)/(R*T)),axis=0))
+    #New now gets rid of infinites
+    Garr=Garr[np.isfinite(Garr)]
+    if len(Garr)==0:
+        return np.double('+inf')
+    # This offset is to guaranty there is no float overflow :
+    # Since the energy being compared are always withing mesostates, they are always close to each other.
+    # Using the first element is faster than mean
+    # The offset is then reapplied, which check out mathematically (eq. 7 and  in the manuscript)
+    offset=Garr[0]
+    Garr=Garr-offset
+    out=-R*T*np.log(np.sum(np.exp(-(Garr)/(R*T)),axis=0))+offset
     return out 
 def check_sign(AA,refs,reverse):
     for j in range(len(refs[1])):
@@ -1046,6 +1152,7 @@ def convert_pattern_to_simplified(pattern,neigh,central_only=True,ion_simplify=T
         ion=ion+'R'
         ion_simp='----++++++'
     if central_only==True :
+        # This is checking for central residue
         found=False
         for j in range(len(ion)):
             if ion[j]==pattern[neigh]:
@@ -1087,7 +1194,10 @@ def convert_pattern_to_simplified(pattern,neigh,central_only=True,ion_simplify=T
                 pattern_out+=pattern[i] 
     return pattern_out
 def setup_motif_database_sequence(reduced,pattern,base_dir):
+#    base_dir='/project/fava/work/martinfossat/pKa_Calc/OPLS'
     check_and_create_rep(base_dir)
+#    check_and_create_rep(base_dir+'/MOTIFS_DATABASE/REDUCED/'+reduced+'/'+pattern)
+#    check_and_create_rep(base_dir+'/MOTIFS_DATABASE/REDUCED/'+reduced+'/'+pattern)
     seq_3=convert_AA_1_to_3(pattern,mode=2)
     neigh=int(len(pattern)/2)   
     if pattern[neigh]=='E':
@@ -1106,9 +1216,9 @@ def setup_motif_database_sequence(reduced,pattern,base_dir):
             W+=seq_3[o]+'\n'
     W+='NME\nEND'
     print("Creating pentapeptide database folder to be submited :")    
-    print(base_dir)
+    print(base_dir)#+'/MOTIFS_DATABASE/REDUCED/'+reduced+'/'+pattern
     check_and_create_rep(base_dir+'/'+reduced+'/'+pattern) 
-    write_file(base_dir+'/'+reduced+'/'+pattern+'/seq.in',W)
+    write_file(base_dir+'/'+reduced+'/'+pattern+'/seq.in',W)#+'/MOTIFS_DATABASE/REDUCED/'+reduced+'/'+pattern+'/seq.in',W)
 def get_pattern_additive_F(pattern,T,neigh,ent_corr=False): 
     global refs
     global AA_type
@@ -1120,6 +1230,7 @@ def get_pattern_additive_F(pattern,T,neigh,ent_corr=False):
     for a0 in range(len(refs[0])):
         if pattern[neigh]==AA_type[a0]: 
             break
+    #ARG is not part of this because no uncharged state, hence the DV already has the sign in it
     ions='EDH89KY'
     seq_F=[]
     seq_F_q=[]
@@ -1129,6 +1240,7 @@ def get_pattern_additive_F(pattern,T,neigh,ent_corr=False):
     else : 
         DX_V=np.copy(DF_V)
         DX_Q=np.copy(DF_Q)
+    #This is a correction to account for the context of the model compound 
     for a1 in range(len(AA_type)):
         if 'G'==AA_type[a1]:
             break
@@ -1138,6 +1250,7 @@ def get_pattern_additive_F(pattern,T,neigh,ent_corr=False):
             if AA_type[a1]==pattern[i].upper() and pattern[i]!='_' and i!=neigh :
                 F_pat+=DX_V[a0,a1,abs(i-neigh)-1] 
                 seq_F+=[DX_V[a0,a1,abs(i-neigh)-1]]
+                #Here the five corresponf to the 6 ionizable amino acid
                 if a1<=5 and  pattern[i].isupper():
                     F_pat+=DX_Q[a0,a1,abs(i-neigh)-1]     
                     seq_F_q+=[DX_Q[a0,a1,abs(i-neigh)-1]]
@@ -1146,7 +1259,23 @@ def get_pattern_additive_F(pattern,T,neigh,ent_corr=False):
         print(pattern," has a problem")
         input(F_pat) 
     return F_pat
-def main_prediction(T,neigh,contexts,pat_E,pat_ste,pat_seq,map,prun_during,per_res,base_E,test_time,max_diff,silent=False):
+def pH_rescaled(pH_org,Eext,T):
+    R=np.double(1.98720425864083*10**(-3))
+    e=1.60217663*10**(-19)  # In coulomb
+    Na=6.02214076*10**(23)
+    J_to_kcal=0.0002388459
+    C0Hp=10**(-pH_org[:])
+    # The sign is wrong....maybe
+    C_Hp=C0Hp[:]*np.exp((-e*Na*Eext*J_to_kcal)/(R*T))
+    pH_eff=-np.log10(C_Hp[:])
+    return pH_eff
+def main_prediction(T,neigh,contexts,pat_E,pat_ste,pat_seq,map,prun_during,per_res,base_E,test_time,max_diff,silent=False,state_prun=False):
+    ## Revision of 23/10/2025 summary
+    ## Previous code had a mistake in the computation of non per_res energy,
+    ## where the kept states would be included in the discarded energy, but not for the two end states
+    ## still trying to address the issue, but it seems I will have to alwasy put all of the states inthe discarded
+    ## states array, which will circunvent the issue.
+    ## We should still be able to decompose into Kept vs Discarded , but by substracting instead of adding
     import itertools
     import sys
     if test_time :
@@ -1159,77 +1288,67 @@ def main_prediction(T,neigh,contexts,pat_E,pat_ste,pat_seq,map,prun_during,per_r
         if i%2==1:
             blocks+=[np.array(tmp)]
             tmp=[]
+    #This is the total energy associated with all discarded states up until this point
     dim=(len(contexts)+1,)
+    # dim base added 23/10/2025 : is the coordinates of the 11 state, which is the base state
+    dim_base=(0,)
     for i in range(neigh):
         dim=dim+(2,)
+        dim_base+=(0,)
     if not per_res:
-        lvl_disc_E=np.zeros(dim,dtype=np.longdouble)
-        lvl_disc_E[:]=np.longdouble('+inf')
+        # This is the energy associated with all the states.
+        lvl_tot_E=np.zeros(dim,dtype=np.double)
+        lvl_tot_E[:]=np.double('+inf')
+        # New 23/10/2025, setting the first energy to the base energy
+        lvl_tot_E[dim_base]=base_E
+    # This is a binary, because if no discarded states are in this array position, it should not be taken into account
+    # These 2 arrays are for site specific information to be kept.
+    # Ok so the strategy is to keep adding
     dim=(len(contexts)+1,len(contexts))
     for i in range(neigh):
         dim=dim+(2,)
+    # This is new : so that we only compute the combinatorics once
+    all_contexts=list(itertools.product([0,1],repeat=neigh))
     if per_res:
-        lvl_context0=np.zeros(dim,dtype=np.longdouble)
+        lvl_context0=np.zeros(dim,dtype=np.double)
         lvl_context0[:]=float('+inf')
-        lvl_context1=np.zeros(dim,dtype=np.longdouble)
+        lvl_context1=np.zeros(dim,dtype=np.double)
         lvl_context1[:]=float('+inf')
-    else :
+    elif state_prun :
+        # These are the energy and identities of the non discraded states
         lvl_ste=[np.array(['']) for i in range(len(contexts)+1)]
-        lvl_E=[np.array([base_E],dtype=np.longdouble) for i in range(len(contexts)+1)]
-    tot=0
-    for i in range(len(pat_E)):
+        lvl_E=[np.array([],dtype=np.double) for i in range(len(contexts)+1)]
+        lvl_E[0]=np.append(lvl_E[0],[base_E])
+        for q in range(1,len(lvl_E)):
+            lvl_E[q]=np.append(lvl_E[q],[np.double("+inf")])
+    ############################################################################
+    # Looping thought position top find the correct patterns
+    # This is the calcualtion main loop (i.e. the step or t in the publication)
+    for t in range(len(pat_E)):
         if not silent :
-            sys.stdout.write("\r "+str(i+1)+" out of "+str(len(pat_E))+'\n')
-        temp_E0=[]
-        for t in range(i+1):
-            if not per_res:
-                temp=np.zeros((len(lvl_ste[t])),dtype=np.longdouble)
-                temp[:]=float('nan')
-                for h in range(len(lvl_ste[t])):
-                    break_it=False
-                    for l in range(len(pat_ste[i])):
-                        ind=[]
-                        offset=0
-                        for o in range(1,neigh+1):
-                            if i-o>=0:
-                                while map[i]-o-offset!=map[i-o] and neigh-o-offset>=0:
-                                    offset+=1
-                                if neigh-o-offset>=0:
-                                    ind=[neigh-o-offset]+ind
-                        min_ind=max(0,i-len(ind))
-                        count_good=0
-                        for o in range(len(ind)) :
-                            if lvl_ste[t][h][min_ind+o]==str(pat_ste[i][l][ind[o]]):
-                                count_good+=1
-                        if count_good==len(ind):
-                            break_it=True
-                            break
-                    if break_it==False:
-                        print(pat_seq[i])
-                        print(pat_ste[i])
-                        print(lvl_ste[t])
-                        input("Problem")
-                    temp[h]=lvl_E[t][h]+pat_E[i][l]
-                temp_E0+=[np.array(temp)]
-        if not per_res :
-            temp_ste1=[np.char.add(lvl_ste[t],np.array(['1'])) for t in range(i+1)]
-            temp_ste0=[np.char.add(lvl_ste[t],np.array(['0'])) for t in range(i+1)]
+            sys.stdout.write("\r "+str(t+1)+" out of "+str(len(pat_E))+'\n')
+        ############################################################################
+        # Looping through already populated mesostates
+        # Now we are going to find the relevant pattern, and save it in temp_pat_E
         dim=(2,)
         for l in range(neigh-1):
             dim=dim+(2,)
-        temp_pat_E=np.zeros(dim,dtype=np.longdouble)
+        temp_pat_E=np.zeros(dim,dtype=np.double)
         temp_pat_E[:]=float('+inf')
-        for l in range(len(pat_ste[i])):
+        ############################################################################
+        # Now_finding all the relevant actual pattern in the simplified sequence space,
+        # That is instead of a linear array, we have a ndimensional array, where n is the number of neighbor neigh
+        for l in range(len(pat_ste[t])):
             all_ind=[()]
             ind=[]
             offset=0
             for o in range(1,neigh+1):
-                if i-o>=0:
+                if t-o>=0:
                     while neigh-o-offset>=0:
-                        if map[i]-o-offset==map[i-o]:
+                        if map[t]-o-offset==map[t-o]:
                             ind=[neigh-o-offset]+ind
                             for h in range(len(all_ind)):
-                                all_ind[h]=(int(pat_ste[i][l][neigh-o-offset]),)+all_ind[h]
+                                all_ind[h]=(int(pat_ste[t][l][neigh-o-offset]),)+all_ind[h]
                             break
                         else:
                             offset+=1
@@ -1237,128 +1356,183 @@ def main_prediction(T,neigh,contexts,pat_E,pat_ste,pat_seq,map,prun_during,per_r
             for curr in  itertools.product([0,1],repeat=neigh-len(ind)):
                 ind_temp=()
                 for h in range(len(ind)):
-                    ind_temp+=(int(pat_ste[i][l][ind[h]]),)
+                    ind_temp+=(int(pat_ste[t][l][ind[h]]),)
                 true_ind+=[curr+ind_temp]
             for h in range(len(true_ind)):
-                temp_pat_E[true_ind[h]]=pat_E[i][l]
-        if prun_during and not per_res :
-            disc_temp_E=np.zeros(np.shape(lvl_disc_E),dtype=np.longdouble)
-            disc_temp_E[:,:]=float('+inf')
+                temp_pat_E[true_ind[h]]=pat_E[t][l]
+        ############################################################################
+        # Now populating the temp arrays for the "half steps" (G'  in the publication)
+        if not per_res :
+            tot_temp_E=np.zeros(np.shape(lvl_tot_E),dtype=np.double)
+            tot_temp_E[:,:]=float('+inf')
         if per_res:
-            lvl_temp_context0= np.zeros(np.shape(lvl_context0),dtype=np.longdouble)
+            lvl_temp_context0=np.zeros(np.shape(lvl_context0),dtype=np.double)
             lvl_temp_context0[:,:]=float('+inf')
-            lvl_temp_context1= np.zeros(np.shape(lvl_context1),dtype=np.longdouble)
+            lvl_temp_context1=np.zeros(np.shape(lvl_context1),dtype=np.double)
             lvl_temp_context1[:,:]=float('+inf')
-        for t in range(i+1):
+        ############################################################################
+        #Looping throught mesostates
+        for q in range(t+1):
+            # In this bit I add the energy to the previous energies while keeping context information.
             if per_res==True:
-                if t==0:
+                # If q==0,
+                if q==0:
                     curr1=()
                     for k in range(neigh):
                         curr1+=(1,)
                     curr0=curr1[:-1]+(0,)
-                    lvl_context0[(t+1,i,)+curr0]=base_E+temp_pat_E[curr1]
-                    lvl_context1[(t,i,)+curr1]=base_E
-                for k in range(i):
-                    base1=(t,k)
-                    base0=(t+1,k)
-                    for curr in itertools.product([0,1],repeat=neigh):
+                    # If this is the first time the residue is taken into account, prepopulate the free energy of the two first mesostates
+                    # This part should be recoded I think, because we should be able to set the first free energy once and for all when the array is declared
+                    lvl_context0[(q+1,t,)+curr0]=base_E+temp_pat_E[curr1]
+                    lvl_context1[(q,t,)+curr1]=base_E
+                # This is a loop through the residue taken into account so far
+                for k in range(t):
+                    #For every residue before i add the free energy of the context associated with i
+                    base1=(q,k)
+                    base0=(q+1,k)
+                    for curr in all_contexts:
                         cont=base1+curr
                         pat_cont=curr
                         new_cont0=base0+curr[1:]+(0,)
                         new_cont1=base1+curr[1:]+(1,)
-                        lvl_temp_context0[new_cont0]=get_G_sum([lvl_temp_context0[new_cont0],lvl_context0[cont]+temp_pat_E[pat_cont]],T)
-                        lvl_temp_context1[new_cont0]=get_G_sum([lvl_temp_context1[new_cont0],lvl_context1[cont]+temp_pat_E[pat_cont]],T)
-                        lvl_temp_context0[new_cont1]=get_G_sum([lvl_temp_context0[new_cont1],lvl_context0[cont]],T)
-                        lvl_temp_context1[new_cont1]=get_G_sum([lvl_temp_context1[new_cont1],lvl_context1[cont]],T)
-                k=i
-                if t==0 :
+                        lvl_temp_context0[new_cont0]=get_G_sum(np.array([lvl_temp_context0[new_cont0],lvl_context0[cont]+temp_pat_E[pat_cont]]),T)
+                        lvl_temp_context1[new_cont0]=get_G_sum(np.array([lvl_temp_context1[new_cont0],lvl_context1[cont]+temp_pat_E[pat_cont]]),T)
+                        lvl_temp_context0[new_cont1]=get_G_sum(np.array([lvl_temp_context0[new_cont1],lvl_context0[cont]]),T)
+                        lvl_temp_context1[new_cont1]=get_G_sum(np.array([lvl_temp_context1[new_cont1],lvl_context1[cont]]),T)
+                k=t
+                if q==0 :
                     k1=k
                     k2=k
-                if t!=0 :
+                if q!=0 :
                     k1=k-1
                     k2=k
-                base1k1=(t,k1)
-                base1k2=(t,k2)
-                base0k1=(t+1,k1)
-                base0k2=(t+1,k2)
-                for curr in itertools.product([0,1],repeat=neigh):
+                base1k1=(q,k1)
+                base1k2=(q,k2)
+                #base0k1=(q+1,k1)
+                base0k2=(q+1,k2)
+                # Now for the levels that are not the first (q!=0) amd the last residue taken into account,(t==k), the
+                # free energy is inherited from the previous residue (eq 12abcd in the publicaiton)
+                for curr in all_contexts:
                     cont=base1k1+curr
                     pat_cont=curr
                     new_cont0=base0k2+curr[1:]+(0,)
                     new_cont1=base1k2+curr[1:]+(1,)
-                    lvl_temp_context0[new_cont0]=get_G_sum([lvl_temp_context0[new_cont0],lvl_context0[cont]+temp_pat_E[pat_cont],lvl_context1[cont]+temp_pat_E[pat_cont]],T)
-                    lvl_temp_context1[new_cont1]=get_G_sum([lvl_temp_context1[new_cont1],lvl_context1[cont],lvl_context0[cont]],T)
-            if prun_during and not per_res:
-                base0=(t+1,)
-                base1=(t,)
-                for curr in itertools.product([0,1],repeat=neigh):
+                    #This the free energy of residue
+                    lvl_temp_context0[new_cont0]=get_G_sum(np.array([lvl_temp_context0[new_cont0],lvl_context0[cont]+temp_pat_E[pat_cont],lvl_context1[cont]+temp_pat_E[pat_cont]]),T)
+                    lvl_temp_context1[new_cont1]=get_G_sum(np.array([lvl_temp_context1[new_cont1],lvl_context1[cont],lvl_context0[cont]]),T)
+            if not per_res:
+                base0=(q+1,)
+                base1=(q,)
+                for curr in all_contexts:
                     cont=base1+curr
                     pat_cont=curr
                     new_cont0=base0+curr[1:]+(0,)
                     new_cont1=base1+curr[1:]+(1,)
-                    disc_temp_E[new_cont0]=get_G_sum([disc_temp_E[new_cont0],lvl_disc_E[cont]+temp_pat_E[pat_cont]],T)
-                    disc_temp_E[new_cont1]=get_G_sum([disc_temp_E[new_cont1],lvl_disc_E[cont]],T) 
+                    tot_temp_E[new_cont0]=get_G_sum(np.array([tot_temp_E[new_cont0],lvl_tot_E[cont]+temp_pat_E[pat_cont]]),T)
+                    tot_temp_E[new_cont1]=get_G_sum(np.array([tot_temp_E[new_cont1],lvl_tot_E[cont]]),T)
         if per_res :
             lvl_context0=lvl_temp_context0
             lvl_context1=lvl_temp_context1
-        if prun_during and not per_res:
-            lvl_disc_E=disc_temp_E
-        if per_res:
             continue
-        for t in range(i+1):
-            lvl_ste[t]=temp_ste1[t]
-        for t in range(i+1):
-            if len(lvl_ste[t+1][0])!=0:
-                lvl_ste[t+1]=np.append(lvl_ste[t+1],temp_ste0[t])
-                lvl_E[t+1]=np.append(lvl_E[t+1],temp_E0[t])
-            else :
-                lvl_ste[t+1]=temp_ste0[t]
-                lvl_E[t+1]=temp_E0[t]
-        if prun_during and not (math.isinf(max_diff) and max_diff>0):
-            for t in range(i+1):
-                if len(lvl_ste[t])<2 :
-                    continue
-                if lvl_ste[t][0]=='':
-                    break
-                W=np.exp(-(lvl_E[t])/(R*T))
-                ind=np.argsort(lvl_E[t])
-                if not (math.isinf(max_diff)) and (max_diff<0):
-                    Z_up=np.cumsum(W[ind[::-1]])[::-1]
-                    Z_down=np.cumsum(W[ind[::1]])
-                    excess=np.sum(np.exp(-lvl_disc_E[t]/(R*T)))
-                    G_down=-R*T*np.log(Z_down)
-                    G_up=-R*T*np.log(Z_up)
-                    G_up_all =-R*T*np.log(np.exp(-G_up /(R*T)) +excess)
-                    G_down_all =-R*T*np.log(np.exp(-G_down /(R*T)) +excess)
-                    temp=np.where(G_up_all>G_down_all+max_diff)
-                    if len(temp[0])<1:  
+        else :
+            lvl_tot_E=tot_temp_E
+        if state_prun:
+            lvl_E_tmp0=[[] for q in range(len(lvl_E))]
+            #lvl_E_tmp1=[[] for q in range(len(lvl_E))]
+            lvl_ste_tmp1=[[] for q in range(len(lvl_E))]
+            lvl_ste_tmp0=[[] for q in range(len(lvl_E))]
+            for q in range(t+1):
+                # Loop in microstates
+                # This part is only to find the relevant pattern and index it based the reduced sequence
+                # to save it in to the kept states only !!!!
+                # pat_E, pat_ste and pat_seq is the pattern in the non-reduced sequence, it will only contain one value if none its
+                # neighbors are ionizable
+                for m in range(len(lvl_ste[q])):
+                    dims=()
+                    for n in range(neigh):
+                        if len(lvl_ste[q][m])-neigh+n<0:
+                            dims+=(1,)
+                        else :
+                            dims+=(int(lvl_ste[q][m][len(lvl_ste[q][m])-neigh+n]),)
+                    lvl_E_tmp0[q+1]+=[lvl_E[q][m]+temp_pat_E[dims]]
+                    lvl_ste_tmp0[q+1]+=[lvl_ste[q][m]+'0']
+                    #lvl_E_tmp1[q]+=[lvl_E[q][m]]
+                    lvl_ste_tmp1[q]+=[lvl_ste[q][m]+'1']
+            # Now recombine
+            for q in range(t+1):
+                lvl_E[q]=np.append(lvl_E[q],lvl_E_tmp0[q])
+                lvl_ste[q]=np.append(lvl_ste_tmp1[q],lvl_ste_tmp0[q])
+            lvl_E[q+1]=np.array(lvl_E_tmp0[q+1])
+            lvl_ste[q+1]=np.array(lvl_ste_tmp0[q+1])
+            # If you are going to keep everything anyway, skip the prunning
+            if prun_during and not (math.isinf(max_diff) and max_diff>0):
+                for q in range(t+1):
+                    # If you are going to keep everything anyway, skip the prunning
+                    if len(lvl_ste[q])<2 :
                         continue
-                    elif len(temp[0])>=len(ind):  
-                        temp=[[temp[0][-1]]]
-                else :
-                    temp=[[1]]
-                ste_temp=lvl_ste[t][ind[temp[0][0]:]]
-                lvl_ste[t]=lvl_ste[t][ind[:temp[0][0]]]
-                lvl_E[t]=lvl_E[t][ind[:temp[0][0]]]
-                W_temp=W[ind[temp[0][0]:]]
-                for curr in itertools.product([1,0],repeat=neigh):
-                    temp_char=''
-                    for c in range(-min(0,len(ste_temp[0])-neigh),len(curr)):
-                        temp_char+=str(curr[c])
-                    bool_temp=np.char.endswith(ste_temp,temp_char,len(ste_temp[0])-min(len(ste_temp[0]),neigh))
-                    if bool_temp.any()==True:
-                        lvl_disc_E[(t,)+curr]=-R*T*np.log(np.exp(-lvl_disc_E[(t,)+curr]/(R*T))+np.sum(W_temp[bool_temp==True]))
-                        tot+=len(W_temp[bool_temp==True])
-        if prun_during and t!=0 and math.isinf(get_G_sum(lvl_disc_E[t].flatten(),T)) and not (math.isinf(max_diff) and max_diff>0):
-            print("MEDOC failed due to lack of machine precision. Try a 64-bit python environment.")
-            quit(1)
+                    # Skip the yet unpopulated levels, and do not do anything until at least two elements(avoids coding for exceptions)
+                    if lvl_ste[q][0]=='':
+                        break
+                    ind=np.argsort(lvl_E[q])
+                    if not (max_diff<=0):
+                        # New code (28/10/2025)
+                        G_tot=get_G_sum(lvl_tot_E[q].flatten(),T)
+                        # print(lvl_E[q][ind])
+                        DG_kept_vs_tot=np.zeros((len(lvl_E[q])))
+                        for m in range(len(lvl_E[q])):
+                            DG_kept_vs_tot[m]=G_tot-get_G_sum(lvl_E[q][ind[:m+1]],T)
+                        temp=np.where(max_diff+DG_kept_vs_tot>0)
+                        # print(DG_kept_vs_tot)
+                        # print(temp)
+                        if len(temp[0])==0:  #If no states get discarded because no combination of states is enough
+                            temp=[[len(ind)]]
+                        elif len(temp[0])==len(ind):#If all states get dicarded, keep the most stable one
+                            temp=[[1]]
+                        elif temp[0][0]<len(ind):# Finally, you can add one states (due to the where function, we want to include the one that makes the threshold be crossed)
+                            temp=[[temp[0][0]+1]]
+                    else :# No state gets discarded because the max diff is 0
+                        temp=[[len(ind)]]
+                    lvl_ste[q]=lvl_ste[q][ind[:temp[0][0]]]
+                    lvl_E[q]=lvl_E[q][ind[:temp[0][0]]]
+                    # To be deleted
+                    # input(DG_kept_vs_tot)
+                    # lvl_tot_E[q]
+                    # W only contains the contributions from states that are kept
+                    # W=np.exp(-(lvl_E[q])/(R*T))
+                    # # So we need W_tot, the total partition function of the whole system of states
+                    # W_tot=np.exp(-(lvl_tot_E[q])/(R*T))
+                    #
+                    # #if all_states will be discarded anyway, skip the energy evaluation
+                    # if not (max_diff<=0):
+                    #     Z_up=np.cumsum(W[ind[::-1]])[::-1]
+                    #     Z_down=np.cumsum(W[ind[::1]])
+                    #
+                    #     excess=np.sum(np.exp(-lvl_tot_E[q]/(R*T)))
+                    #     G_down=-R*T*np.log(Z_down)
+                    #     G_up=-R*T*np.log(Z_up)
+                    #
+                    #     G_up_all =-R*T*np.log(np.exp(-G_up /(R*T))+excess)
+                    #     G_down_all =-R*T*np.log(np.exp(-G_down /(R*T))+excess)
+                    #     temp=np.where(G_up_all>G_down_all+max_diff)
+                    #
+                    #     if len(temp[0])<1:  #If no states get discarded
+                    #         continue
+                    #     elif len(temp[0])>=len(ind):  #If all states are discarded, just keep the most stable one
+                    #         temp=[[temp[0][-1]]]
+                    # else :
+                    #     temp=[[1]]
+                    #
+                    # lvl_ste[q]=lvl_ste[q][ind[:temp[0][0]]]
+                    # lvl_E[q]=lvl_E[q][ind[:temp[0][0]]]
     if test_time :
         t1=time.time()
         print(t1-t0)
     if per_res:
         return lvl_context0,lvl_context1
+    elif not state_prun:
+        return None,None,lvl_tot_E
     else :
-        return lvl_ste,lvl_E,lvl_disc_E
+        return lvl_ste,lvl_E,lvl_tot_E
 def write_file(file_name,W,silent=True):
     try :
         with open(file_name,'w') as f :
@@ -1382,9 +1556,19 @@ def get_microstates_population_mesostates(DFs,DFs_err,T):
         p+=[W[i]/sum(W)]
         p_err+=[p[-1]*np.sqrt((W_err[i]/W[i])**2+(W_tot_err/sum(W))**2)]
     return p,p_err
+def check_and_create_rep(directory,silent=True):
+    try :
+        os.makedirs(directory)
+    except :
+        if os.path.exists(directory) and not silent:
+            print('Could not create directory ('+directory+') : already exists')
+        if not os.path.exists(directory):
+            print('Error creating directory '+directory)
 def get_mesostate_site_spe_G(lvl_ste,lvl_E,T):
     out0=[]
     out1=[]
+    #print(lvl_ste)
+    #print(lvl_E)
     for i in range(len(lvl_ste)):
         temp0=[[] for j in range(len(lvl_ste[0][0]))]
         temp1=[[] for j in range(len(lvl_ste[0][0]))]
@@ -1405,14 +1589,21 @@ def get_mesostate_site_spe_G(lvl_ste,lvl_E,T):
     out0=np.array(out0)
     return out0,out1
 def plot_proba_F_per_res(save0,save1,pH,T):
-    proba0=np.zeros((len(save0[0]),len(pH)),dtype=np.longdouble)
-    proba1=np.zeros((len(save0[0]),len(pH)),dtype=np.longdouble)
+    proba0=np.zeros((len(save0[0]),len(pH)),dtype=np.double)
+    proba1=np.zeros((len(save0[0]),len(pH)),dtype=np.double)
+    # For each position, the partition function is the pH dependent 
     for k in range(len(save0[0])):
-        W0=np.zeros((len(save0),len(pH)),dtype=np.longdouble)
-        W1=np.zeros((len(save0),len(pH)),dtype=np.longdouble)
+        W0=np.zeros((len(save0),len(pH)),dtype=np.double)
+        W1=np.zeros((len(save0),len(pH)),dtype=np.double)
         for i in range(len(save0)):
             W0[i]=np.exp(-(save0[i,k]-i*np.log(10.)*R*T*pH[:])/(R*T))
             W1[i]=np.exp(-(save1[i,k]-i*np.log(10.)*R*T*pH[:])/(R*T))
+            #W0[i]=np.exp(-(save0[i,k]/(R*T)-i*np.log(10.)*pH[:]))
+            #W1[i]=np.exp(-(save1[i,k]/(R*T)-i*np.log(10.)*pH[:]))
+#             print(i*np.log(10.)*R*T*pH[:])
+#             input(save0[i,k])
+#             W0[i]=np.exp(-(-i*np.log(10.)*R*T*pH[:])/(R*T))
+#             W1[i]=np.exp(-((save1[i,k]-save0[i,k])-i*np.log(10.)*R*T*pH[:])/(R*T))
         proba1[k]=np.sum(W1,axis=0)/(np.sum(W1,axis=0)+np.sum(W0,axis=0))
         proba0[k]=np.sum(W0,axis=0)/(np.sum(W1,axis=0)+np.sum(W0,axis=0))
     return proba1,proba0
@@ -1451,7 +1642,7 @@ def compute_charge_density(frac,charge,pH,seq,indices,suffix,win_sz=3,get_back=F
     cbar=plt.colorbar()
     cbar.set_label('Charge density',rotation=270)
     check_and_create_rep('./Results/Plots/')
-    plt.tight_layout()
+    #plt.tight_layout()
     plt.savefig('./Results/Plots/Charge_density_vs_pH_'+suffix+'.pdf')
     plt.close()
     if get_back :
@@ -1464,6 +1655,7 @@ def make_charge_color_string_for_plt(seq_1,seq_id,include_caps=False,asString=Fa
         st=1
         end=len(seq_id)-1
     seq_id_out=[]
+    #Need to add r to each elelmets
     for k in range(st,end):
         if str(seq_id[k])=='1' :
             tmp=seq_1[k].upper()
@@ -1490,12 +1682,15 @@ def make_charge_color_string_for_plt(seq_1,seq_id,include_caps=False,asString=Fa
     return seq_id_out 
 def plot_probas(Proba,Proba_err,st_count,pH,title='Proba',subrep='./',separate=0,print_micro=0,
                 labely='Mesostate probability',color='rainbow',labels=[],publi_figure=False):
+    #New version : instead of proba of all, just passes mesostates proba and intra mesotates populations
     import matplotlib
     from matplotlib import cm
     import matplotlib.pyplot as plt
     plt.rcParams["font.family"]="Times New Roman"
     from matplotlib.backends.backend_pgf import FigureCanvasPgf
     matplotlib.backend_bases.register_backend('pdf', FigureCanvasPgf)
+    #matplotlib.rcParams['text.latex.unicode']=False
+    #matplotlib.rcParams["text.latex.preamble"].append(r'\usepackage[dvips]{graphicx}\usepackage{xfrac}')
     pgf_with_latex = {
         "text.usetex": True,
         "pgf.preamble":
@@ -1515,6 +1710,9 @@ def plot_probas(Proba,Proba_err,st_count,pH,title='Proba',subrep='./',separate=0
         colors=[color for i in range(len(Proba))]
     if len(labels)==0:
         labels=np.array(['' for i in range(len(Proba))])
+    # This is to allow multiple dimensions to be plotted at once
+    #if len(pH)!=len(Proba) and len(pH)==len(Proba[0]):
+    #    pH=[pH for i in range(len(Proba))]
     plt.close()
     linewidth=0.5
     if publi_figure:
@@ -1556,6 +1754,7 @@ def plot_frac_and_deriv(pH_a,addi,name,points=[[],[]],points_syn=[[],[]],loc='./
     import scipy 
     pH_ind_pKa=np.argwhere(abs(addi[:]-0.5)==np.amin(abs(addi[:]-0.5)))[0][0]
     pKa_a=pH_a[pH_ind_pKa]
+    #get_sym(pH_a,addi,pH_ind_pKa)
     xd,d_addi=deriv(pH_a,addi)
     unsh=(10**(-pKa_a+pH_a))/(1+10**(-pKa_a+pH_a))
     xd,d_unsh=deriv(pH_a,unsh)
@@ -1576,7 +1775,8 @@ def plot_frac_and_deriv(pH_a,addi,name,points=[[],[]],points_syn=[[],[]],loc='./
     cross_m_ind=np.argwhere(abs(addi[:]-conf1)==np.amin(abs(addi[:]-conf1)))[0][0]
     cross_p_ind=np.argwhere(abs(addi[:]-conf2)==np.amin(abs(addi[:]-conf2)))[0][0]
     median_trans_ind=int(np.round((cross_p_ind+cross_m_ind)/2.,0))
-    w_d=2. 
+    #asy=pH_a[median_trans_ind]-pH_a[pH_ind_pKa]
+    w_d=2. #Width within which the skewdness is analyzed, centered arounds the mean    
     for p in range(len(xd)):
         if xd[p]<pKa_a-w_d:
             min_ind=p+1 
@@ -1596,7 +1796,7 @@ def plot_frac_and_deriv(pH_a,addi,name,points=[[],[]],points_syn=[[],[]],loc='./
         inds_lin=get_pH_equivalence(points[0],pH_a)  
         corr=np.corrcoef(addi[inds_lin[:]],points[1])
     else : 
-        corr=np.zeros((2,2))*np.longdouble('NaN')
+        corr=np.zeros((2,2))*np.double('NaN')
     if plot :
         plt.title(W_title)
         plt.subplot(211)
@@ -1608,6 +1808,7 @@ def plot_frac_and_deriv(pH_a,addi,name,points=[[],[]],points_syn=[[],[]],loc='./
             plt.scatter(points_syn[0],points_syn[1],color='None',edgecolors='grey',label='Synthetic points')
         if len(points[0])!=0:
             plt.scatter(points[0],points[1],color='k',label='Real points')
+        #plt.xlabel('pH')
         plt.xlim(0,14)
         plt.ylabel('Fraction deprotonated')
         plt.legend()
@@ -1622,14 +1823,24 @@ def plot_frac_and_deriv(pH_a,addi,name,points=[[],[]],points_syn=[[],[]],loc='./
             xd,dy=deriv(pH_a,y)
             plt.plot(xd,dy,color='r',alpha=0.5)
         plt.vlines(pKa_a,0,d_addi[pH_ind_pKa],color='orange',linestyle='--',label='pK$_a$')
+        #plt.vlines(pH_a[median_trans_ind],0,d_addi[median_trans_ind],color='k',linestyle='--',label='Transition middle pH')
+        #plt.hlines(cross_height,pH_a[cross_m_ind],pH_a[cross_p_ind],color='orange',label='Width first half')
         plt.plot(xd,d_addi,color='g')
         plt.legend()
         plt.savefig(loc+prefix+'Fraction_protonated_derivative_'+name+'.pdf')
         plt.close()
+    #xd2,d2_addi=deriv(xd,d_addi)
+    #d_points_pH,d_points=deriv(points[0],points[1])
+    #d2_points_pH,d2_points=deriv(d_points_pH,d_points)
+    #plt.scatter(d2_points_pH,d2_points,color='k')
+    #plt.plot(xd2,d2_addi,color='g')
+    #plt.savefig(loc+prefix+'Second_derivative_'+name+'.pdf')
+    #mean,std,mu3=get_skewness(xd,d_addi)
+    #mean,std,mu3=get_skewness(xd[min_ind:max_ind],bis[min_ind:max_ind])
     return pKa_a,coop,asy
 def get_sym(pH,proba,pKa_ind):
-    sym1=proba.copy()
-    sym2=proba.copy()
+    sym1=proba.copy()#np.zeros((np.shape(p)))
+    sym2=proba.copy()#np.zeros((np.shape(p)))
     for p in range(len(proba)):   
         if 2*pKa_ind-p<0:
             sym1[p]=0.
@@ -1643,6 +1854,14 @@ def get_sym(pH,proba,pKa_ind):
             sym1[p]=1-proba[2*pKa_ind-p]
         elif p<pKa_ind:
             sym2[p]=1-proba[2*pKa_ind-p]
+#def get_synth_points_from_fit(pHs_syn,DF_out,Proba):
+#    vals_syn=[]
+#    for i in range(len(pHs_syn)):
+#        vals_syn+=[mix_probas_fitting(DF_out,Proba,pHs_syn[i])][i]
+#    print vals_syn
+#    raw_input()
+#    
+#    return vals_syn
 def deriv(x,y):                                                                                                                                                          
     return (x[1:]+x[0:-1])/2.,(y[1:]-y[0:-1])/(x[1:]-x[0:-1])
 def hill_equation(pH,pKa,n,plat1,plat2): 
@@ -1651,11 +1870,13 @@ def hill_equation(pH,pKa,n,plat1,plat2):
 def hill_equation_from_hill_param(pH,hill_param):
     return hill_equation(pH,hill_param[0],hill_param[1],hill_param[2],hill_param[3])
 def get_pH_equivalence(pH_dis,pH_lin):
+    #Get the point of a discreet scale onto a linear scale
     inds=np.zeros((len(pH_dis)),dtype=np.int)
     for i in range(len(pH_dis)):
         inds[i]=np.argwhere(np.amin(abs(pH_dis[i]-pH_lin[:]))==abs(pH_dis[i]-pH_lin[:]))[0][0]
     return inds
 def get_skewness(x,y):
+    #This is the fisher-pearson skewness
     N=np.sum(y)
     mean=np.sum(x*y)/N
     p=y/N
@@ -1674,6 +1895,7 @@ def get_mesostate_Fs(Fs,T):
     for i in range(len(Fs)):
         offset=0
         temp=0 
+            # This is simply to avoid infinits from the exponential
         if np.mean(Fs[i])<-306. or np.mean(Fs[i])>306.:
             offset=np.mean(Fs[i])
         for j in range(len(Fs[i])):
@@ -1681,18 +1903,19 @@ def get_mesostate_Fs(Fs,T):
         F_meso+=[-R*T*np.log(temp)+offset]
     return F_meso
 def get_probas_2(Fs,Fs_err,pH,T,ign_norm_err=True,unsafe=0):
+#    MAX_abs=600.# This is for offset to avoid infinite partition function
     Fs=np.array(Fs)
     Fs_err=np.array(Fs_err)
     Weights_count=np.array([ len(Fs)-k-1 for k in range(len(Fs))])
-    Weights=np.zeros((len(Fs),len(pH)),dtype=np.longdouble)
-    Weights_err=np.zeros((len(Fs),len(pH)),dtype=np.longdouble)
-    Weights_norm=np.zeros((len(pH)),dtype=np.longdouble)
-    Weights_norm_err=np.zeros((len(pH)),dtype=np.longdouble)
+    Weights=np.zeros((len(Fs),len(pH)),dtype=np.double)
+    Weights_err=np.zeros((len(Fs),len(pH)),dtype=np.double)
+    Weights_norm=np.zeros((len(pH)),dtype=np.double)
+    Weights_norm_err=np.zeros((len(pH)),dtype=np.double)
     MIN=np.amin(Fs)
     MAX=np.amax(Fs)
-    Exponents=np.zeros((len(Fs),len(pH)),dtype=np.longdouble)
-    Exponents2=np.zeros((len(Fs),len(pH)),dtype=np.longdouble)
-    Exponents3=np.zeros((len(Fs),len(pH)),dtype=np.longdouble)
+    Exponents=np.zeros((len(Fs),len(pH)),dtype=np.double)
+    Exponents2=np.zeros((len(Fs),len(pH)),dtype=np.double)
+    Exponents3=np.zeros((len(Fs),len(pH)),dtype=np.double)
     Fs=np.asarray(Fs)
     Proba=np.zeros((len(Fs),len(pH)))
     Proba_err=np.zeros((len(Fs),len(pH)))
@@ -1730,6 +1953,7 @@ def get_probas_2(Fs,Fs_err,pH,T,ign_norm_err=True,unsafe=0):
                     np.sqrt((S_A/A)**2+(S_B/B)**2-2*cor[0][1]*S_A*S_B/(A*B))]
             else :
                 Proba_err[i]+=[Weights_err[i,p]/Weights_norm[p]]
+    #Getting the partition function adn its error
     for i in range(len(Fs)):
         if math.isnan(Fs[i]):
             continue
@@ -1745,17 +1969,20 @@ def get_probas_2(Fs,Fs_err,pH,T,ign_norm_err=True,unsafe=0):
                     cor[0][1]=0.0
                 if math.isnan(Fs_err[i])==False :
                     if Weights_norm_err[p]!=0:
-                        Weights_norm_err[p]+=np.sqrt((Weights_norm_err[p])**2+(Weights_err[i,p])**2)
+                        Weights_norm_err[p]+=np.sqrt((Weights_norm_err[p])**2+(Weights_err[i,p])**2)#+2*cor[0][1]*Weights_norm_err[p]*Weights_err[int(Mapping[i][j]),p])
                     else :
                         Weights_norm_err[p]+=Weights_err[i,p]
     return Weights_norm,Weights_norm_err,Proba,Proba_err
 def plot_probas2(Proba,Proba_err,st_count,pH,title='Proba',subrep='./',legend=[]):
+    #New version : instead of proba of all, just passes mesostates proba and intra mesotates populations
     import matplotlib
+    #matplotlib.use("pgf")
     from matplotlib import cm
     import matplotlib.pyplot as plt
     plt.rcParams["font.family"]="Times New Roman"
     from matplotlib.backends.backend_pgf import FigureCanvasPgf
     matplotlib.backend_bases.register_backend('pdf', FigureCanvasPgf)
+    #matplotlib.rcParams['text.latex.unicode']=False
     pgf_with_latex = {
         "text.usetex": True,
         "pgf.preamble":
@@ -1812,69 +2039,36 @@ def write_per_res_F(save0,save1,suffix):
             W+=str(save1[i][j])+'\t'
         W+='\n'
     write_file('Results/Fs/Per_res_1_'+suffix+'.txt',W)
-def plot_quantity_vs_pH2(vals,Proba_1,pH,seq_1,st_count,name,publi_figure=False,labely=''):
-    import matplotlib 
-    matplotlib.use("pgf")
-    from matplotlib.backends.backend_pgf import FigureCanvasPgf 
-    matplotlib.backend_bases.register_backend('pdf', FigureCanvasPgf)
-    pgf_with_latex = {
-        "text.usetex": True,
-        "pgf.preamble":
-            r'\usepackage{color}',
-        "font.family": "Times New Roman"}
+def get_probas_3(Fs,Fs_err,pH,T,ign_norm_err=True,unsafe=0):
+    # Ok new startegy :
+    # We are going to compute the invert sum (to get 1/p_i instead of p_i directly)
+    # This is because it uses differences betwee states, which makes the float overflow less likely since we are
+    # dealing with smaller values.
+    # Okay this works, pending thorough testing (26/10/2025)
+    n=np.array([i for i in range(len(Fs))])
+    DW_sum=np.zeros((len(Fs),len(pH)))
+    p_i=np.zeros((len(Fs),len(pH)))
+    for i in range(len(Fs)):
+        Dn=n-n[i]
+        DF=Fs-Fs[i]
+        for j in range(len(Dn)):
+            DF_tot=DF[j]+R*T*np.log(10)*Dn[j]*pH
+            DW_sum[i]+=np.exp(-(DF_tot/(R*T)))
+        p_i[i]=1./DW_sum[i]
+    return p_i
+def plot_probas3(Proba,Proba_err,pH_eff,pH,title='Proba',subrep='./',legend=[],Eext=0,suffix=''):
+    #New version : instead of proba of all, just passes mesostates proba and intra mesotates populations
     import matplotlib
-    matplotlib.rcParams.update(pgf_with_latex)
-    import matplotlib.pyplot as plt
-    from matplotlib import cm
-    plt.close()
-    if publi_figure:
-        plt.figure(figsize=(4,3))
-    else :
-        plt.figure(figsize=(8,6))
-    Values=np.zeros((len(pH)),dtype=float)      
-    Values=np.transpose(Values)
-    SSP=np.asarray(vals) 
-    for i in range(len(st_count)):     
-        for j in range(len(st_count[i])):
-            if math.isnan(st_count[i][j]*SSP[i][j])==False:           
-                Values[:]=Values[:]+Proba_1[i]*st_count[i][j]*SSP[i][j]
-    plt.xlim(0,14)
-    plt.ylim(np.min(Values)-0.5,np.max(Values)+0.5)
-    plt.ylabel(labely)
-    plt.xlabel('pH')
-    plt.plot(pH,Values)
-    plt.tight_layout()
-    plt.savefig('Results/Plots/'+name+'_vs_pH.pdf')
-    plt.close()
-    save_pH_dependent_curve(Values,pH,name)   
-def save_pH_dependent_curve(vals,pH,name):
-    W='pH\t'+name+'\n'
-    for p in range(len(pH)):
-        W+=str(pH[p])+'\t'+str(vals[p])+'\n'
-    check_and_create_rep('./Results/Plots/pH_plots_raw_data')
-    write_file('./Results/Plots/pH_plots_raw_data/'+name+'.txt',W)
-
-
-"""MEDOC 2.0 is meant to take the prediction of protonation with  external electric fields"""
-__author__ = "Martin Fossat"
-__credits__ = ["Martin Fossat"]
-__version__ = "2.0"
-__maintainer__ = "Martin Fossat"
-__email__ = "fossat@ie-freiburg.mpg.de"
-__status__ = "Production"
-def plot_probas3(Proba,Proba_err,pH_eff,pH,title='Proba',subrep='./',legend=[],Eext=0):
-    import matplotlib
-    import math
     import matplotlib.pyplot as plt
     plt.rcParams["font.family"]="Times New Roman"
     from matplotlib.backends.backend_pgf import FigureCanvasPgf
-    matplotlib.backend_bases.register_backend('pdf', FigureCanvasPgf)
-    pgf_with_latex = {
-        "text.usetex": True,
+    matplotlib.backend_bases.register_backend('pdf',FigureCanvasPgf)
+    pgf_with_latex={
+        "text.usetex":True,
         "pgf.preamble":
             r'\usepackage{color}'
         ,
-        "font.family": "Times New Roman"}
+        "font.family":"Times New Roman"}
     import matplotlib
     matplotlib.rcParams.update(pgf_with_latex)
     import matplotlib.pyplot as plt
@@ -1885,7 +2079,9 @@ def plot_probas3(Proba,Proba_err,pH_eff,pH,title='Proba',subrep='./',legend=[],E
     plt.xlim(np.round(np.amin(pH_eff)),np.round(np.amax(pH_eff)))
     plt.gca().set_ylim(top=1.)
     pH=np.array(pH)
+    no_legend=False
     if len(legend)==0:
+        no_legend=True
         legend=['' for i in range(len(Proba))]
     plt.xlabel("Effective pH")
     plt.ylabel("Mesostate probability")
@@ -1907,41 +2103,18 @@ def plot_probas3(Proba,Proba_err,pH_eff,pH,title='Proba',subrep='./',legend=[],E
             continue
         plt.plot(pH_eff,Proba[i],color=colors[i],linestyle='-',label=str(legend[i]))
         plt.fill_between(pH_eff, low_err, high_err, color=colors[i],alpha=0.5)
-    plt.legend()
-    ax2=ax1.twiny()
-    ax1_ticks=ax1.get_xticks()
-    ax2_label=pH_rescaled(ax1_ticks,Eext)
-    ax2.set_xticks(ax1_ticks)
-    label=["%.2f" % ax2_label[i] for i in range(len(ax2_label))]
-    ax2.set_xticklabels(label)
+    if not no_legend:
+        plt.legend()
     check_and_create_rep('Results/Plots/')
     check_and_create_rep('Results/Plots/'+subrep)
-    plt.savefig('Results/Plots/'+subrep+'/Mesostates_'+title+'_'+str(Eext)+'.pdf')
-import matplotlib
-matplotlib.use("pgf")                                                                    
-from matplotlib.backends.backend_pgf import FigureCanvasPgf 
-matplotlib.backend_bases.register_backend('pdf', FigureCanvasPgf)
-pgf_with_latex = {
-    "text.usetex": True,
-    "pgf.preamble":
-        r'\usepackage{color}',
-    "font.family": "Times New Roman" }
-import matplotlib
-matplotlib.rcParams.update(pgf_with_latex)
-import matplotlib.pyplot as plt
-import numpy as np
-import scipy.misc
-import os
-import time
-global AA_type
-MODULE_PATH = os.path.dirname(__file__)
-AA_type=['E','D','H','K','Y','8','9','R','C','A','F','G','L','I','M','N','P','Q','T','V','S','W']
-default_res=0.01
-R=np.longdouble(1.98720425864083*10**(-3))
+    try :
+        plt.savefig('./Results/Plots/'+subrep+'/Mesostates_'+suffix+'.pdf')
+    except :
+        print('Could not print the mesostate Bjerrum plot, most likely due to too many lines being drawn')
 if __name__=="__main__":
     import argparse
-    import math
     from matplotlib import cm
+    ################## Parser declaration ######################
     parser = argparse.ArgumentParser()
     parser.add_argument("--site_specific","-ss",
                         help="Whether the scope of the prediction is global (0) or site-specific (1)",
@@ -1949,6 +2122,13 @@ if __name__=="__main__":
     parser.add_argument("--seq_file","-s",
                         help="Sequence file containing a single line of uninterrupted amino acid sequence",
                         default='seq.fasta')
+    parser.add_argument("--detailed_suffix","-ds",
+                        help="Whether or not to include execution parameters in the naming of the figures (0 or 1)")
+    # V2.2 : Changed from a fraction, which does not work as intended
+    parser.add_argument("--max_diff", "-md",
+                        help="Max free energy difference ",default=float(0))
+    parser.add_argument("--prunning", "-p",
+                        help="D for During, A for After")
     parser.add_argument("--predict_type", "-pt",
                         help="Prediction type ([I]mplicit, [U]nshifted)",
                         default="I")
@@ -1966,6 +2146,7 @@ if __name__=="__main__":
                         help="Temperature ",
                         default=298.)
     args = parser.parse_args()
+    ################## Parser Analysis ######################
     if args.pH_range :
         if len(args.pH_range)!=2:
             print("Must provide 2 values for the pH range")
@@ -1976,6 +2157,20 @@ if __name__=="__main__":
         pH_range=[0,14]
     if args.seq_file:
         seq_file=args.seq_file
+    if args.detailed_suffix:
+        try:
+            if int(args.detailed_suffix)==1:
+                detailed_suffix=True
+            elif int(args.detailed_suffix)==0:
+                detailed_suffix=False
+            else:
+                detailed_suffix=False
+                print("Invalid option for detailed_suffix, defaulting to ",detailed_suffix)
+        except:
+            detailed_suffix=False
+            print("Invalid option for detailed_suffix, defaulting to ",detailed_suffix)
+    else:
+        detailed_suffix=False
     if args.site_specific:
         try:
             if int(args.site_specific)==1:
@@ -1992,9 +2187,9 @@ if __name__=="__main__":
         per_res=False
     if args.temp:
         try: 
-            T=np.longdouble(args.temp)
+            T=np.double(args.temp)
         except :
-            T=np.longdouble(298.)
+            T=np.double(298.)
             print("Invalid option for temperature, defaulting to ",T)
     if args.det_level:
         try: 
@@ -2028,8 +2223,18 @@ if __name__=="__main__":
         additive=False
         penta=True
         unshifted=False
-    prun_during=True
-    prun_after=False
+    if args.prunning:
+        state_prun=True
+        if args.prunning.upper()=='A':
+            prun_after=True
+            prun_during=False
+        elif args.prunning.upper()=='D':
+            prun_after=False
+            prun_during=True
+    else:
+        prun_after=False
+        prun_during=False
+        state_prun=False
     if args.nneigh :
         try : 
             if int(args.nneigh)>=1:
@@ -2047,6 +2252,15 @@ if __name__=="__main__":
         except : 
             neigh=2
             print("Invalid value for nneigh, defaulting to ",neigh)
+    if args.max_diff :
+        try :
+            max_diff=float(args.max_diff)
+        except :
+            max_diff=0.
+            print("Invalid value for max_diff, defaulting to ",max_diff)
+    else :
+        max_diff=0.
+        print("No value for max_frac_diff, defaulting to ",max_diff)
     if args.base_E:
         try :
             base_E=float(args.base_E)
@@ -2056,6 +2270,7 @@ if __name__=="__main__":
     else:
         base_E=-709.0*(R*T)
         print("No value for base_E, defaulting to ",base_E)
+    ################## Basic variable attribution  ######################
     fraction_kept=0.
     max_frac=float('+inf')
     test_time=False
@@ -2066,16 +2281,30 @@ if __name__=="__main__":
     HT=True
     debug=False
     reverse=True
+    if unshifted :
+        neigh=1
+    if detailed_suffix:
+        if per_res :
+            suffix+='_SS1'
+        else :
+            suffix+='_SS0'
+        suffix+='_nn'+str(neigh)
+        suffix+='_T'+str(T)
     if HT==True :
         database_suffix='_HT'     
     else : 
         database_suffix=''
-    e=1.60217663*10**(-19)  
+        # External electric field in V default is 0
+    e=1.60217663*10**(-19)  # In coulomb
     Na=6.02214076*10**(23)
     J_to_kcal=0.0002388459
     base_rep=''
     initialize_additive_DF_array_MEDOC_public()
-    pH=np.arange(pH_range[0],pH_range[1],res,dtype=np.longdouble)
+    ################## Sequence analysis and Setup ######################
+    pH=np.arange(pH_range[0],pH_range[1]+res,res,dtype=np.double)
+    if state_prun and per_res:
+        print("Cannot do siste specific and prunning of states at the same time. Exiting")
+        quit()
     seq_1=read_file(seq_file)[0][0]
     if seq_1[0]!='z':
         seq_1='z'+seq_1
@@ -2083,9 +2312,11 @@ if __name__=="__main__":
         seq_1=seq_1+'z'
     seq_3=convert_AA_1_to_3(seq_1,mode=2)
     list_res=[i for i in range(len(seq_3))]
+    #A base energy in reduced units such that it is around -709 when divied by RT
     T_expt=298.
     seq_1=convert_AA_3_to_1_letter(seq_3)
-    max_diff=-R*T*np.log(max_frac)
+    # Legacy V2.1
+    #max_diff=-R*T*np.log(max_frac)
     t_start=time.time()
     sites_num,titrable_residue_indexes,pos_res,neg_res,base_charge,arg_res,raw_seq,seq_data_q,seq_data_id,seq_id_reduced,map,new_W=read_sequence(seq_3,list_res)
     Nmes=pos_res+base_charge+1-(-neg_res+arg_res+base_charge)
@@ -2093,93 +2324,120 @@ if __name__=="__main__":
     refs=get_ref_pkas_MEDOC_public()
     contexts,states=get_base_contexts(map,neigh,seq_1,seq_data_q)
     pat_E,pat_ste,pat_seq=get_all_contexts(contexts,states,neigh,refs,unshifted,reverse,penta,additive,T,base_rep,reduced)
-    save_pH=np.zeros((len(Electric_fields),len(pH)))
+    ################## Electric field effect introduction and  main loop ######################
     if per_res :
-        dim=(len(Electric_fields),len(contexts)+1,len(contexts))
+        dim=(len(contexts)+1,len(contexts))
         for i in range(neigh):
             dim=dim+(2,)
-        save_lvl_context0=np.zeros(dim,dtype=np.longdouble)
+        save_lvl_context0=np.zeros(dim,dtype=np.double)
         save_lvl_context0[:]=float('+inf')
-        save_lvl_context1=np.zeros(dim,dtype=np.longdouble)
+        save_lvl_context1=np.zeros(dim,dtype=np.double)
         save_lvl_context1[:]=float('+inf')
     else :
-        save_lvl_E=np.zeros((len(Electric_fields),len(pat_E)+1,1),dtype=np.longdouble)
-        save_lvl_disc_E=np.zeros((len(Electric_fields),len(pat_E)+1,neigh,neigh),dtype=np.longdouble)
+        dim=(len(contexts)+1,)
+        for i in range(neigh):
+            dim=dim+(2,)
+        save_lvl_E=np.zeros((len(pat_E)+1,1),dtype=np.double)
+        save_lvl_tot_E=np.zeros((dim),dtype=np.double)
     signs=[seq_data_q[titrable_residue_indexes[i]] for i in range(len(titrable_residue_indexes))]
-    for E in range(len(Electric_fields)):
-        Eext=Electric_fields[E]
-        pat_E_eff=[[pat_E[i][j] for j in range(len(pat_E[i]))] for i in range(len(pat_E))]
-        for i in range(len(pat_E)):
-            for j in range(len(pat_E[i])):
-                pat_E_eff[i][j]=pat_E_eff[i][j]-e*Na*Eext*J_to_kcal
-        pH_eff=pH_rescaled(pH,Eext)
-        if per_res :
-            lvl_context0,lvl_context1=main_prediction(T,neigh,contexts,pat_E_eff,pat_ste,pat_seq,map,prun_during,per_res,
-                                                         base_E,test_time,max_diff)
-            save_lvl_context0[E]=lvl_context0
-            save_lvl_context1[E]=lvl_context1
-        else :
-            lvl_ste,lvl_E,lvl_disc_E=main_prediction(T,neigh,contexts,pat_E_eff,pat_ste,pat_seq,map,prun_during,per_res,
-                                                        base_E,test_time,max_diff)
-            save_lvl_E[E]=lvl_E
-            save_lvl_disc_E[E]=lvl_disc_E
-        save_pH[E]=pH_eff
+    pH_eff=pH
+    pat_E_eff=[[pat_E[i][j] for j in range(len(pat_E[i]))] for i in range(len(pat_E))]
+    for i in range(len(pat_E)):
+        for j in range(len(pat_E[i])):
+            pat_E_eff[i][j]=pat_E_eff[i][j]
+    if per_res :
+        lvl_context0,lvl_context1=main_prediction(T,neigh,contexts,pat_E_eff,pat_ste,pat_seq,map,prun_during,per_res,base_E,test_time,max_diff,state_prun=state_prun)
+    else :
+        lvl_ste,lvl_E,lvl_tot_E=main_prediction(T,neigh,contexts,pat_E_eff,pat_ste,pat_seq,map,prun_during,per_res,base_E,test_time,max_diff,state_prun=state_prun)
     disc_E=[]
     print("There are ",pos_res-arg_res+neg_res," ionizable residue")
     if test_time :
         print("MEDOC ran in "+str(time.time()-t_start)+" seconds")
         write_file('./Compute_time.txt',str(time.time()-t_start))
-    if not per_res:
+    if not per_res and state_prun:
         SUM=[]
         for i in range(Nmes):
             SUM+=[len(lvl_ste[i])]
     if (prun_during or prun_after) and not per_res:
-        if fraction_kept==1. :
-            SW=''
-            EW=''
-            popW=''
-            for i in range(len(lvl_ste)):
-                for j in range(len(lvl_ste[i])):
-                    SW+=lvl_ste[i][j]+'\t'
-                    EW+=str(lvl_E[i][j])+'\t'
-                SW+='\n'
-                EW+='\n'
-                temp=get_microstates_population_mesostates(lvl_E[i],lvl_E[i]*0,T)
-                for j in range(len(temp[0])):
-                    popW+=str(temp[0][j])+'\t'
-                popW+='\n'
-            print('./Results/Fs/Fs_'+suffix+'.txt')
-            write_file('./Results/Fs/Populations_'+suffix+'.txt',popW)
-            check_and_create_rep('./Results/States_details/')
-            write_file('./Results/States_details/States_'+suffix+'.txt',SW)
-            write_file('./Results/Fs/Fs_'+suffix+'.txt',EW)
-    Meso_G_all=np.zeros((len(Electric_fields),Nmes),dtype=np.longdouble)
-    if prun_during and not per_res:
-        if det_lvl>=2: 
-            print("q\tTotal energy\tKept energy\tDiscarded energy")
-        for i in range(len(lvl_disc_E)):
-            temp_1=get_G_sum(np.concatenate((lvl_disc_E[i].flatten(),lvl_E[i])),T)
-            temp_2=get_G_sum(lvl_E[i],T)
-            temp_3=get_G_sum(lvl_disc_E[i].flatten(),T)
-            if det_lvl>=2:
-                print(layers_q[len(layers_q)-1-i],'\t',"%0.4f" % temp_1,'\t',"%0.4f" % temp_2,'\t',"%0.4f" % temp_3)
-    elif not per_res :
+            if fraction_kept==1. :
+                SW=''
+                EW=''
+                popW=''
+                for i in range(len(lvl_ste)):
+                    for j in range(len(lvl_ste[i])):
+                        SW+=lvl_ste[i][j]+'\t'
+                        EW+=str(lvl_E[i][j])+'\t'
+                    SW+='\n'
+                    EW+='\n'
+                    temp=get_microstates_population_mesostates(lvl_E[i],lvl_E[i]*0,T)
+                    for j in range(len(temp[0])):
+                        popW+=str(temp[0][j])+'\t'
+                    popW+='\n'
+                print('./Results/Fs/Fs_'+suffix+'.txt')
+                write_file('./Results/Fs/Populations_'+suffix+'.txt',popW)
+                check_and_create_rep('./Results/States_details/')
+                write_file('./Results/States_details/States_'+suffix+'.txt',SW)
+                write_file('./Results/Fs/Fs_'+suffix+'.txt',EW)
+    Meso_G_all=np.zeros((Nmes),dtype=np.double)
+    #print(lvl_ste)
+    if not per_res:
         if det_lvl>=2:
-            print("Total energy\tKept energy\tDiscarded energy")
-        for i in range(Nmes): 
-            temp_1=get_G_sum(lvl_E[i],T)
-            temp_2=disc_E[i] 
-            temp_3=get_G_sum([temp_1,temp_2],T)
+            min_frac=np.exp(-max_diff/(R*T))
+            print("Max diff : "+str(max_diff)+" which corresponds to a minimum ensemble fraction of the kept states of %0.4f" %min_frac)
+            if not state_prun :
+                print("q\tTotal energy\tTotal N_states")
+            else :
+                print("q\tTotal energy\tKept energy\tDiscarded energy\tTotal N_states\tN_kept_states\tKept states fraction\tKept ensemble fraction")
+        for i in range(len(lvl_tot_E)):
+            # Okay here is where I need to
+            temp_1=get_G_sum(lvl_tot_E[i].flatten(),T)
+            if state_prun:
+                temp_2=get_G_sum(lvl_E[i],T)
+                temp_5=len(lvl_ste[i])
+                temp_3=-R*T*np.log(np.exp(-temp_1/(R*T))-np.exp(-temp_2/(R*T)))
+                temp_7=lvl_ste[i]
+                temp_9=np.exp(-temp_2/(R*T))/np.exp(-temp_1/(R*T))
+            temp_4=layers_q[len(layers_q)-1-i]
+            try :
+                temp_6=int(scipy.special.comb(Nmes-1,i))
+                if temp_6>10**6:
+                    temp_8="%0.4e" %temp_6
+                else :
+                    temp_8=str(temp_6)
+            except :
+                temp_8='Too large to estimate'
+            # print(temp_5,temp_6)
+            # print(temp_5/temp_6)
+            # print("%0.4f"%(temp_5/temp_6))
             if det_lvl>=2:
-                print(temp_3,temp_1,temp_2)
+                if state_prun:
+                    print(str(temp_4).rjust(6),'\t',"%0.4f" % temp_1,'\t',"%0.4f" % temp_2,'\t',("%0.4f" % temp_3).rjust(8),'\t', temp_8.rjust(7),'\t',str(temp_5).rjust(7),"%0.4f" % (temp_5/temp_6),"%0.4f" %temp_9)
+                else :
+                    print(temp_4,'\t',"%0.4f"%temp_1,'\t',temp_6)
+    # elif not per_res :
+    #     if det_lvl>=2:
+    #         #This is for Shahar
+    #         print("q\tTotal energy\tKept energy\tDiscarded energy\tTotal_N_states\tKept_states_ids")
+    #
+    #     for i in range(Nmes):
+    #         temp_1=get_G_sum(lvl_E[i],T)
+    #         temp_2=disc_E[i]
+    #         temp_3=get_G_sum([temp_1,temp_2],T)
+    #         temp_4=layers_q[len(layers_q)-1-i]
+    #         temp_5=len(lvl_ste[i])
+    #         temp_6=int(scipy.special.comb(Nmes-1,i))
+    #         if temp_6>10**6:
+    #             temp_6="%0.4e"%temp_6
+    #         if det_lvl>=2:
+    #             print(temp_4,'\t',"%0.4f" % temp_1,'\t',"%0.4f" % temp_2,'\t',"%0.4f" % temp_3,'\t',temp_6,'\t',temp_5,lvl_ste[i],lvl_E[i])
     check_and_create_rep('Results/Fs')
     if per_res:
-        if debug==True:
+        if debug==True:# This no longer works since I am not keeping any states in siste specific mode.
             reconstructed=np.zeros((2,)+np.shape(lvl_context0))
             reconstructed[:,:,:]=float('+inf')
             for i in range(Nmes):
                 for j in range(len(lvl_ste[i])):
-                    ind=()        
+                    ind=()
                     for k in range(len(lvl_ste[i][j])):
                         if lvl_ste[i][j][k]=='0':
                             base=(0,i,k)
@@ -2188,14 +2446,14 @@ if __name__=="__main__":
                         for l in range(len(lvl_ste[i][j])-neigh,len(lvl_ste[i][j])):
                             base+=(int(lvl_ste[i][j][l]),)
                         ind+=(base,)
-                    for k in range(len(ind)):             
+                    for k in range(len(ind)):
                         reconstructed[ind[k]]=get_G_sum([reconstructed[ind[k]],lvl_E[i][j]],T)
-                if det_lvl>=3 :                
+                if det_lvl>=3 :
                     for k in range(len(reconstructed[0][i])):
                         print(i,k)
-                        print("0should be ")
+                        print("0 should be ")
                         print(reconstructed[0][i][k])
-                        print("0is ")
+                        print("0 is ")
                         print(lvl_context0[i][k])
                         print()
             out0,out1=get_mesostate_site_spe_G(lvl_ste,lvl_E,T)
@@ -2208,12 +2466,14 @@ if __name__=="__main__":
         save0_tmp=save0
         save1_tmp=save1
         print("Computing residue wise probabilities")
-        proba0,proba1=plot_proba_F_per_res(save0-2*base_E,save1-2*base_E,pH_eff,T)
+        proba0,proba1=plot_proba_F_per_res(save0-2*base_E,save1-2*base_E,pH,T)
         if det_lvl>=1:
             print("Plotting charge density vs pH")
-            compute_charge_density(proba0,seq_data_q,pH_eff,seq_1,map,suffix)
+            compute_charge_density(proba0,seq_data_q,pH,seq_1,map,suffix)
         print("Plotting residue wise probabilities")
         IAAs=['D','E','Y','H','K']
+        colors=['orange','red','maroon','darkturquoise','blue']
+        st_count_fake_r=[[1.] for i in range(len(proba0[0]))]
         colors=['orange','red','maroon','darkturquoise','blue']
         st_count_fake_r=[[1.] for i in range(len(proba0))]
         temp_all=[]
@@ -2228,7 +2488,7 @@ if __name__=="__main__":
             temp_labels=[]
             temp_colors=[]
             for i in range(len(proba0)):
-                if seq_1[map[i]]==IAAs[t]:
+                if seq_1[map[i]].upper()==IAAs[t]:
                     temp+=[proba0[i]]
                     temp_all+=[proba0[i]]
                     colors_all+=[colors[t]]
@@ -2246,7 +2506,7 @@ if __name__=="__main__":
         if det_lvl>=2:
             try :
                 print("Plotting all residue probabilities")
-                plot_probas(np.array(temp_all),np.array(temp_all)*0.,st_count_fake_r,pH_eff,
+                plot_probas(np.array(temp_all),np.array(temp_all)*0.,st_count_fake_r,pH,
                            title='Proba_Residue_all_'+suffix,labely='Fraction protonated',
                            color=colors_all,labels=np.array(all_labels),publi_figure=publi_figure)
             except :
@@ -2257,118 +2517,65 @@ if __name__=="__main__":
                     continue
                 try :
                     print("Plotting all "+IAAs[t]+" probabilities")
-                    plot_probas(np.array(temp_temp[t]),np.array(temp_temp[t])*0.,st_count_fake_r,pH_eff,
+                    plot_probas(np.array(temp_temp[t]),np.array(temp_temp[t])*0.,st_count_fake_r,pH,
                                    title='Proba_Residue_all_'+IAAs[t]+'_'+suffix,labely='Fraction protonated',
                                    color=all_colors_all[t],labels=all_labels_all[t],publi_figure=publi_figure)
                 except :
                     print("Could not plot probas for "+IAAs[t])
     if det_lvl>=2 and per_res:
         print("Printing site specific derivative and transition parameters")
-        param_all=np.zeros((len(proba0),3),dtype=np.longdouble)
+        param_all=np.zeros((len(proba0),3),dtype=np.double)
         names=[]
-        for i in range (len(proba0)):
-            names+=[seq_1[map[i]]+str(map[i]+1)]
-            try :
-                if det_lvl<4 :
-                    param_all[i]=plot_frac_and_deriv(pH_eff,proba1[i,:],name=seq_1[map[i]]+str(map[i]+1),loc='./Results/Plots/',fit=False,plot=False)
-                else :
-                    param_all[i]=plot_frac_and_deriv(pH_eff,proba1[i,:],name=seq_1[map[i]]+str(map[i]+1),
-                                                        loc='./Results/Plots/',fit=False,plot=True)
-            except :
-                print("Could not print individual figure for ",names[i])
-        x=[i for i in range(len(param_all))]
-        plt.bar(x,param_all[:,1],color='orange')
-        plt.xticks(x,names,rotation=90)
-        plt.savefig('Results/Plots/Cooperativity_factor_per_res_pred.pdf')
-        plt.close()
-        W=''
-        for i in range(len(names[i])):
-            W+=names[i]+'\t'+str(param_all[i,1])+'\n'
-        write_file('./Results/Plots/pH_plots_raw_data/Cooperativity_factor_per_res.txt',W)
-        plt.bar(x,param_all[:,2],color='green')
-        plt.xticks(x,names,rotation=90)
-        plt.savefig('Results/Plots/Asymetry_factor_per_res_pred.pdf')
-        plt.close()
-        W=''
-        for i in range(len(names[i])):
-            W+=names[i]+'\t'+str(param_all[i,2])+'\n'
-        write_file('./Results/Plots/pH_plots_raw_data/Asymetry_factor_per_res.txt',W)
-    if per_res:
-        W='pH\t'
-        for i in range(len(temp_all)):
-            W+='res_'+str(map[i])+'\t'
-        W+='\n'
-        for p in range(len(pH)):
-            W+=str(pH[p])+'\t'
-            for r in range(len(temp_all)):
-                W+=str(temp_all[r][p])+'\t'
-            W+='\n'
-        check_and_create_rep('./Results/Plots/pH_plots_raw_data/')
-        write_file('./Results/Plots/pH_plots_raw_data/Fraction_protonated_per_residue_'+suffix+'.txt',W)
-        W=''
-        pKas_out=[]
-        pKas_ind=[]
         for i in range(len(proba0)):
-            for p in range(1,len(proba0[i])):
-                if proba0[i][p]<0.5  and proba0[i][p-1]>=0.5 :
-                    pKas_out+=[pH[p]]
-                    pKas_ind+=[p]
-                    W+=seq_1[map[i]]+str(map[i])+'\t'+str(np.round(pH[p],len(str(res))-1))+'\n'
-                    break
-                elif p==len(proba0[i])-1:
-                    pKas_out+=[float('NaN')]
-                    pKas_ind+=[p]
-                    W+=seq_1[map[i]]+str(map[i])+'\t'+str('NaN')+'\n'
-        check_and_create_rep('Results/pKas/')
-        write_file('Results/pKas/pKas_per_res_'+suffix+'.txt',W)
+            names+=[seq_1[map[i]]+str(map[i]+1)]
+            try:
+                if det_lvl<4:
+                    param_all[i]=plot_frac_and_deriv(pH,proba1[i,:],
+                                                        name=seq_1[map[i]]+str(map[i]+1),
+                                                        loc='./Results/Plots/',fit=False,plot=False)
+                else:
+                    param_all[i]=plot_frac_and_deriv(pH,proba1[i,:],
+                                                        name=seq_1[map[i]]+str(map[i]+1),
+                                                        loc='./Results/Plots/',fit=False,plot=True)
+            except:
+                print("Could not print individual figure for ",names[i])
     pop_count=[[1.] for i in range(Nmes)]
     qs=[[layers_q[i]] for i in range(len(layers_q))]
-    if det_lvl>=5 and max_frac==0.0:
+    if det_lvl>=5:
         F_meso=get_mesostate_Fs(lvl_E,T) 
         print("Computing weights restricted")
         Weights_norm,Weights_norm_err,Proba_meso,Proba_meso_err=get_probas_2(F_meso,F_meso,pH_eff,T)
         print("Plotting probas restricted")
         plot_probas2(Proba_meso,Proba_meso_err,pop_count,pH_eff,subrep='',title='Proba_restricted_'+suffix)
     if per_res :
-        for E in range(len(Electric_fields)):
-            for i in range(Nmes):
-                Meso_G_all[E,i]=get_G_sum([get_G_sum(lvl_context0[i,0].flatten(),T),get_G_sum(lvl_context1[i,0].flatten(),T)],T)
-            write_per_res_F(save0,save1,suffix)
-            Meso_G_all[E]=Meso_G_all[E,::-1]-2*base_E
+        for i in range(Nmes):
+            Meso_G_all[i]=get_G_sum(np.array([get_G_sum(lvl_context0[i,0].flatten(),T),get_G_sum(lvl_context1[i,0].flatten(),T)]),T)
+        write_per_res_F(save0,save1,suffix)
+        Meso_G_all=Meso_G_all[::-1]-2*base_E
     else :
-        for E in range(len(Electric_fields)):
-            for i in range(Nmes):
-                Meso_G_all[E,i]=get_G_sum(np.concatenate((save_lvl_disc_E[E,i].flatten(),save_lvl_E[E,i])),T)
-            Meso_G_all[E]=Meso_G_all[E,::-1]-2*base_E
+        for i in range(Nmes):
+            # For some reason the lvl_E is inverted (this is due to incosistent choise of direction in the thermodynamic path)
+            Meso_G_all[i]=get_G_sum(lvl_tot_E[i],T)
+        Meso_G_all=Meso_G_all[::-1]-2*base_E
     W=''
     for i in range(len(Meso_G_all)):
         W+=str(Meso_G_all[i])+'\n'
     check_and_create_rep('Results/Fs')
     write_file('Results/Fs/Mesostate_F_'+suffix+'.txt',W,silent=False)
     plt.close()
-    if len(Electric_fields)==1:
-        colors=[cm.coolwarm_r(0.5)]
-    else :
-        max_abs_E=np.amax(abs(Electric_fields))
-        colors=[cm.coolwarm_r((Electric_fields[i]+max_abs_E)/(2*max_abs_E)) for i in range(len(Electric_fields))]
-    for E in range(len(Electric_fields)):
-        plt.plot(pH,save_pH[E],color=colors[E],label='E='+str(Electric_fields[E]))
-    plt.plot(pH,pH,color='k',linestyle='--',label='Reference pH')
-    plt.legend()
-    plt.savefig('./Results/Plots/pH_eff_vs_pH.pdf')
-    plt.close()
-    for E in range(len(Electric_fields)):
-        print("Computing weights at electric field "+str(Electric_fields[E]))
-        Weights_norm,Weights_norm_err,Proba_meso,Proba_meso_err=get_probas_2(Meso_G_all[E],Meso_G_all[E]*0.,save_pH[E],T)
-        Values=np.zeros((len(pH)),dtype=float)
-        Values=np.transpose(Values)
-        for i in range(len(qs)):
-            for j in range(len(qs[i])):
-                Values[:]=Values[:]+Proba_meso[i]*1.*qs[i][j]
-        if np.any(np.isnan(Values[:])) :
-            print("There is a problem in computing the partition function, resulting in NaNs. This can normaly be fixed by changing the base_E (currently is "+str(base_E)+")")
-            input()
-        plt.plot(pH,Values,label='E='+str(Electric_fields[E])+'V',color=colors[E])
+    print("Computing weights")
+    Weights_norm,Weights_norm_err,Proba_meso,Proba_meso_err=get_probas_2(Meso_G_all,Meso_G_all*0.,pH,T)
+    Values=np.zeros((len(pH)),dtype=float)
+    Values=np.transpose(Values)
+    for i in range(len(qs)):
+        for j in range(len(qs[i])):
+            Values[:]=Values[:]+Proba_meso[i]*1.*qs[i][j]
+    if np.any(np.isnan(Values[:])):
+        print(
+            "There is a problem in computing the partition function, resulting in NaNs. This can normaly be fixed by changing the base_E (currently is "+str(
+                base_E)+")")
+        input()
+    plt.plot(pH,Values)
     max_all=np.amax(qs)
     min_all=np.amin(qs)
     plt.xlim(0,14)
@@ -2377,4 +2584,6 @@ if __name__=="__main__":
     plt.ylabel('Net Charge')
     plt.xlabel('pH')
     plt.tight_layout()
-    plt.savefig('Results/Plots/Q_vs_pH.pdf')
+    check_and_create_rep('./Results/Plots/')
+    plt.savefig('Results/Plots/Q_vs_pH_'+suffix+'.pdf')
+    plot_probas3(Proba_meso,Proba_meso[:]*0.,pH_eff,pH,title='',subrep='Mesostates',suffix=suffix)
