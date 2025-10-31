@@ -1465,7 +1465,7 @@ def main_prediction(T,neigh,contexts,pat_E,pat_ste,pat_seq,map,prun_during,per_r
             lvl_E[q+1]=np.array(lvl_E_tmp0[q+1])
             lvl_ste[q+1]=np.array(lvl_ste_tmp0[q+1])
             # If you are going to keep everything anyway, skip the prunning
-            if prun_during and not (math.isinf(max_diff) and max_diff>0):
+            if prun_during  and not max_diff==0:
                 for q in range(t+1):
                     # If you are going to keep everything anyway, skip the prunning
                     if len(lvl_ste[q])<2 :
@@ -1490,7 +1490,7 @@ def main_prediction(T,neigh,contexts,pat_E,pat_ste,pat_seq,map,prun_during,per_r
                             temp=[[1]]
                         elif temp[0][0]<len(ind):# Finally, you can add one states (due to the where function, we want to include the one that makes the threshold be crossed)
                             temp=[[temp[0][0]+1]]
-                    else :# No state gets discarded because the max diff is 0
+                    elif (math.isinf(max_diff) and max_diff>0):# No state gets discarded because the max diff is 0
                         temp=[[len(ind)]]
                     lvl_ste[q]=lvl_ste[q][ind[:temp[0][0]]]
                     lvl_E[q]=lvl_E[q][ind[:temp[0][0]]]
@@ -2048,6 +2048,7 @@ def get_probas_3(Fs,Fs_err,pH,T,ign_norm_err=True,unsafe=0):
     n=np.array([i for i in range(len(Fs))])
     DW_sum=np.zeros((len(Fs),len(pH)))
     p_i=np.zeros((len(Fs),len(pH)))
+    #DF_tot=np.zeros((len(Fs),len(pH)))
     for i in range(len(Fs)):
         Dn=n-n[i]
         DF=Fs-Fs[i]
@@ -2405,10 +2406,11 @@ if __name__=="__main__":
                 else :
                     temp_8=str(temp_6)
             except :
+                temp_6=float('inf')
                 temp_8='Too large to estimate'
             if det_lvl>=2:
                 if state_prun:
-                    print(str(temp_4).rjust(6),'\t',"%0.4f" % temp_1,'\t',"%0.4f" % temp_2,'\t',("%0.4f" % temp_3).rjust(8),'\t', temp_8.rjust(7),'\t',str(temp_5).rjust(7),"%0.4f" % (temp_5/temp_6),"%0.4f" %temp_9)
+                    print(str(temp_4).rjust(6),'\t',"%0.4f" % temp_1,'\t',"%0.4f" % temp_2,'\t',("%0.4f" % temp_3).rjust(8),'\t', temp_8.rjust(12),'\t',str(temp_5).rjust(7),"%0.4f" % (temp_5/temp_6),"%0.4f" %temp_9)
                 else :
                     print(temp_4,'\t',"%0.4f"%temp_1,'\t',temp_6)
         if state_prun:
@@ -2416,8 +2418,8 @@ if __name__=="__main__":
             W_E_temp='Mesostate_q\tStates_energies\n'
             W_ste_temp='Mesostate_q\tStates_ids\n'
             for q in range(len(lvl_ste)):
-                W_E_temp+=str(layers_q[q])+'\t'
-                W_ste_temp+=str(layers_q[q])+'\t'
+                W_E_temp+=str(layers_q[len(layers_q)-1-i])+'\t'
+                W_ste_temp+=str(layers_q[len(layers_q)-1-i])+'\t'
                 for m in range(len(lvl_ste[q])):
                     W_E_temp+=str(lvl_E[q][m])+'\t'
                     W_ste_temp+=lvl_ste[q][m]+'\t'
@@ -2587,6 +2589,7 @@ if __name__=="__main__":
                 base_E)+")")
         input()
     plt.plot(pH,Values)
+    print('Plotting Q vs pH')
     max_all=np.amax(qs)
     min_all=np.amin(qs)
     plt.xlim(0,14)
@@ -2597,4 +2600,5 @@ if __name__=="__main__":
     plt.tight_layout()
     check_and_create_rep('./Results/Plots/')
     plt.savefig('Results/Plots/Q_vs_pH_'+suffix+'.pdf')
+    print('Plotting Mesostate plot')
     plot_probas3(Proba_meso,Proba_meso[:]*0.,pH_eff,pH,title='',subrep='Mesostates',suffix=suffix)
